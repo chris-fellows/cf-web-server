@@ -1,7 +1,7 @@
 ﻿using CFWebServer.Interfaces;
 using CFWebServer.Models;
 
-namespace CFWebServer
+namespace CFWebServer.WebServerComponents
 {
     /// <summary>
     /// Processes requests
@@ -16,8 +16,8 @@ namespace CFWebServer
         private CancellationToken _cancellationToken;
 
 
-        public RequestsComponent(ILogWriter logWriter, 
-                            ServerData serverData, 
+        public RequestsComponent(ILogWriter logWriter,
+                            ServerData serverData,
                             IWebRequestHandlerFactory webRequestHandlerFactory,
                             CancellationToken cancellationToken)
         {
@@ -25,7 +25,7 @@ namespace CFWebServer
             _serverData = serverData;
             _webRequestHandlerFactory = webRequestHandlerFactory;
             _cancellationToken = cancellationToken;
-        }        
+        }
 
         public void Start()
         {
@@ -62,7 +62,7 @@ namespace CFWebServer
                             var task = HandleAsync(requestContext);
                         }
                     }
-                }              
+                }
 
                 Thread.Yield();
             }

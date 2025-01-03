@@ -15,7 +15,7 @@ namespace CFWebServer
         private readonly ServerData _serverData;
 
         public WebRequestHandlerFactory(IFolderConfigService folderConfigService,
-                            ServerData serverData)
+                                        ServerData serverData)
         {
             _folderConfigService = folderConfigService;
             _serverData = serverData;
@@ -26,7 +26,10 @@ namespace CFWebServer
             // TODO: Use DI or reflection
             var list = new List<IWebRequestHandler>()
             {
-                new StaticResourceWebRequestHandler(_serverData)
+                new StaticResourceDeleteWebRequestHandler(_serverData),
+                new StaticResourceGetWebRequestHandler(_serverData),
+                new StaticResourcePostWebRequestHandler(_serverData),
+                new StaticResourcePutWebRequestHandler(_serverData)
             };
 
             return list;
@@ -34,7 +37,12 @@ namespace CFWebServer
 
         public IWebRequestHandler? Get(RequestContext requestContext)
         {
-            return GetAll().FirstOrDefault(h => h.CanHandle(requestContext));
+            // Get web request handlers than can handle this request
+            var webRequestHandlers = GetAll().Where(h => h.CanHandle(requestContext)).ToList();
+
+            // Return first
+            // TODO: Pick best one
+            return webRequestHandlers.FirstOrDefault();
         }
     }
 }

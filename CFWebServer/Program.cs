@@ -8,7 +8,9 @@ var logWriter = new DefaultLogWriter();
 logWriter.Log("Starting CF Web Server");
 
 // Set server data
-var serverData = new ServerData(10010, 10, "D:\\Test\\CFWebServer\\Root");
+var rootFolder = Path.Combine(System.Reflection.Assembly.GetExecutingAssembly().Location, "Root");
+//var rootFolder = "D:\\Test\\CFWebServer\\Root";
+var serverData = new ServerData(10010, 10, rootFolder);
 
 // Set folder for config data
 var configFolder = Path.Combine(System.Reflection.Assembly.GetExecutingAssembly().Location, "Config");

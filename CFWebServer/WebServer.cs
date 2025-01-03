@@ -1,5 +1,6 @@
 ﻿using CFWebServer.Interfaces;
 using CFWebServer.Models;
+using CFWebServer.WebServerComponents;
 
 namespace CFWebServer
 {
@@ -21,7 +22,7 @@ namespace CFWebServer
                             ServerData serverData,
                             IWebRequestHandlerFactory webRequestHandlerFactory,
                             CancellationToken cancellationToken)
-        {
+        {                        
             if (serverData.ReceivePort < 1)
             {
                 throw new ArgumentException("Receive Port must be set");
@@ -29,13 +30,13 @@ namespace CFWebServer
             if (String.IsNullOrEmpty(serverData.RootFolder))
             {
                 throw new ArgumentException("Root Folder must be set");
-            }
+            }            
 
             _folderConfigService = folderConfigService;
             _logWriter = logWriter;
             _serverData = serverData;
             _webRequestHandlerFactory = webRequestHandlerFactory;
-            _cancellationToken = cancellationToken;
+            _cancellationToken = cancellationToken;          
 
             _logWriter.Log($"Listening port: {_serverData.ReceivePort}");
             _logWriter.Log($"Max concurrent requests: {_serverData.MaxConcurrentRequests}");

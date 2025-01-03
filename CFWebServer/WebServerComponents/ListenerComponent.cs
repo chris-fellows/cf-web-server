@@ -2,7 +2,7 @@
 using CFWebServer.Models;
 using System.Net;
 
-namespace CFWebServer
+namespace CFWebServer.WebServerComponents
 {
     /// <summary>
     /// Listens for requests
@@ -10,7 +10,7 @@ namespace CFWebServer
     internal class ListenerComponent : IWebServerComponent
     {
         private Thread? _thread;
-        
+
         private HttpListener? _listener;
         private ILogWriter _logWriter;
 
@@ -19,8 +19,8 @@ namespace CFWebServer
         private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
 
         private CancellationToken _cancellationToken;
-        
-        public ListenerComponent(ILogWriter logWriter, 
+
+        public ListenerComponent(ILogWriter logWriter,
                             ServerData serverData,
                             IWebRequestHandlerFactory webRequestHandlerFactory,
                             CancellationToken cancellationToken)
@@ -35,7 +35,7 @@ namespace CFWebServer
         {
             _logWriter.Log("Starting listening for requests");
 
-            _listener = new HttpListener();            
+            _listener = new HttpListener();
             _listener.Prefixes.Add($"http://localhost:{_serverData.ReceivePort}/");
             _listener.Start();
 
@@ -59,7 +59,7 @@ namespace CFWebServer
         }
 
         public void WorkerThread()
-        {            
+        {
             while (!_cancellationToken.IsCancellationRequested)
             {
                 // Get listener context
@@ -88,6 +88,6 @@ namespace CFWebServer
 
                 Thread.Yield();
             }
-        }   
+        }
     }
 }

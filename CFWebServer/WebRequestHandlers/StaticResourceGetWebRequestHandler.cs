@@ -7,13 +7,13 @@ using System.Text;
 namespace CFWebServer.WebRequestHandlers
 {
     /// <summary>
-    /// Handles request for static resource
+    /// Handles GET request for static resource
     /// </summary>
-    internal class StaticResourceWebRequestHandler : IWebRequestHandler
+    internal class StaticResourceGetWebRequestHandler : IWebRequestHandler
     {
         private readonly ServerData _serverData;
 
-        public StaticResourceWebRequestHandler(ServerData serverData)
+        public StaticResourceGetWebRequestHandler(ServerData serverData)
         {
             _serverData = serverData;
         }
@@ -58,6 +58,6 @@ namespace CFWebServer.WebRequestHandlers
                 response.StatusCode = (int)HttpStatusCode.NotFound;
             }
             response.Close();
-        }
+        }        
     }
 }

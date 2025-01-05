@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CFWebServerMobile.MainPage">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,0"
+            Spacing="25">
+            <Image
+                Source="dotnet_bot.png"
+                HeightRequest="185"
+                Aspect="AspectFit"
+                SemanticProperties.Description="dot net bot in a race car number eight" />
+            
+            <Picker x:Name="SiteConfigList" 
+                  ItemsSource="{Binding SiteConfigs}"
+                  ItemDisplayBinding="{Binding Name}"
+                  SelectedItem="{Binding SelectedSiteConfig, Mode=TwoWay}"/>
+
+            <Button
+                x:Name="StartSiteBtn"
+                Text="Start Site"
+                Command="{Binding StartSiteCommand}"
+                IsEnabled="{Binding IsStartSiteEnabled, Mode=OneWay}"/>
+
+            <Button
+                x:Name="StopSiteBtn"
+                Text="Stop Site"
+                Command="{Binding StopSiteCommand}"
+                IsEnabled="{Binding IsStopSiteEnabled, Mode=OneWay}"/>
+
+            <Label Text="Error"/>
+            <Label
+                x:Name="ErrorLabel"
+                Text="{Binding ErrorMessage, Mode=OneWay}"/>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

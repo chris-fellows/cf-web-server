@@ -5,6 +5,15 @@ Basic web server. Currently only serves static resources.
 Each process logically supports multiple websites but the command line only supports parameters for a 
 single website. It would just need changes to read the websites from a config file.
 
+# CFWebServerCommon (Class library)
+This is a class library containing the web server components.
+
+# CFWebServerConsole (Console app)
+This is a console app for running the web server.
+
+# CFWebServerMobile (.NET Maui app)
+This is an .NET Maui app for running the web server. Currently it only run on Android.
+
 # Command Line
 Command line supports running only one website.
 

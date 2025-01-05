@@ -5,10 +5,12 @@ using CFWebServer.WebServerComponents;
 namespace CFWebServer
 {
     /// <summary>
-    /// Web server
+    /// Web server. Serves one website.
     /// </summary>
     internal class WebServer
     {
+        private readonly ICacheService _cacheService;
+        private readonly IFileCacheService _fileCacheService;
         private readonly IFolderConfigService _folderConfigService;
         private readonly ILogWriter _logWriter;
         private readonly ServerData _serverData;
@@ -17,40 +19,45 @@ namespace CFWebServer
 
         private CancellationToken _cancellationToken;
 
-        public WebServer(IFolderConfigService folderConfigService,
+        public WebServer(ICacheService cacheService,
+                         IFileCacheService fileCacheService,
+                            IFolderConfigService folderConfigService,
                             ILogWriter logWriter, 
                             ServerData serverData,
                             IWebRequestHandlerFactory webRequestHandlerFactory,
                             CancellationToken cancellationToken)
-        {                        
-            if (serverData.ReceivePort < 1)
+        {                            
+            if (String.IsNullOrEmpty(serverData.Site))
             {
-                throw new ArgumentException("Receive Port must be set");
+                throw new ArgumentException("Site must be set");
             }
             if (String.IsNullOrEmpty(serverData.RootFolder))
             {
                 throw new ArgumentException("Root Folder must be set");
-            }            
+            }
 
+            _cacheService = cacheService;
+            _fileCacheService = fileCacheService;
             _folderConfigService = folderConfigService;
             _logWriter = logWriter;
             _serverData = serverData;
             _webRequestHandlerFactory = webRequestHandlerFactory;
             _cancellationToken = cancellationToken;          
 
-            _logWriter.Log($"Listening port: {_serverData.ReceivePort}");
-            _logWriter.Log($"Max concurrent requests: {_serverData.MaxConcurrentRequests}");
+            _logWriter.Log($"Site: {_serverData.Site}");
             _logWriter.Log($"Root folder: {_serverData.RootFolder}");
+            _logWriter.Log($"Max concurrent requests: {_serverData.MaxConcurrentRequests}");            
+            _logWriter.Log($"File cache enabled: {(_serverData.CacheFileConfig.Expiry > TimeSpan.Zero).ToString()}");
         }
         
         public void Start()
         {
             // Add listener component
-            var listenerComponent = new ListenerComponent(_logWriter, _serverData, _webRequestHandlerFactory, _cancellationToken);
+            var listenerComponent = new ListenerComponent(_cacheService, _logWriter, _serverData, _webRequestHandlerFactory, _cancellationToken);
             _webServerComponents.Add(listenerComponent);
 
             // Add requests component
-            var requestsComponent = new RequestsComponent(_logWriter, _serverData, _webRequestHandlerFactory, _cancellationToken);
+            var requestsComponent = new RequestsComponent(_cacheService, _fileCacheService, _logWriter, _serverData, _webRequestHandlerFactory, _cancellationToken);
             _webServerComponents.Add(requestsComponent);
 
             // Start components

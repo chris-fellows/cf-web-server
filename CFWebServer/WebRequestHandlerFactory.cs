@@ -1,22 +1,26 @@
 ﻿using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using CFWebServer.WebRequestHandlers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CFWebServer
 {
+    /// <summary>
+    /// Factory for IWebRequestHandler instances
+    /// </summary>
     internal class WebRequestHandlerFactory : IWebRequestHandlerFactory
     {
+        private readonly ICacheService _cacheService;
+        private readonly IFileCacheService _fileCacheService;
         private readonly IFolderConfigService _folderConfigService;
         private readonly ServerData _serverData;
 
-        public WebRequestHandlerFactory(IFolderConfigService folderConfigService,
+        public WebRequestHandlerFactory(ICacheService cacheService,
+                                        IFileCacheService fileCacheService,
+                                        IFolderConfigService folderConfigService,
                                         ServerData serverData)
         {
+            _cacheService = cacheService;
+            _fileCacheService = fileCacheService;
             _folderConfigService = folderConfigService;
             _serverData = serverData;
         }
@@ -26,10 +30,11 @@ namespace CFWebServer
             // TODO: Use DI or reflection
             var list = new List<IWebRequestHandler>()
             {
-                new StaticResourceDeleteWebRequestHandler(_serverData),
-                new StaticResourceGetWebRequestHandler(_serverData),
-                new StaticResourcePostWebRequestHandler(_serverData),
-                new StaticResourcePutWebRequestHandler(_serverData)
+                //new TestCustomGetWebRequestHandler(_fileCacheService, _serverData),
+                new StaticResourceDeleteWebRequestHandler(_fileCacheService, _serverData),
+                new StaticResourceGetWebRequestHandler(_fileCacheService, _serverData),
+                new StaticResourcePostWebRequestHandler(_fileCacheService, _serverData),
+                new StaticResourcePutWebRequestHandler(_fileCacheService, _serverData)
             };
 
             return list;

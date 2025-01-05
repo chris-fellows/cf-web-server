@@ -8,13 +8,12 @@ namespace CFWebServer.WebRequestHandlers
     /// <summary>
     /// Handles POST request for static resource
     /// </summary>
-    internal class StaticResourcePostWebRequestHandler : IWebRequestHandler
-    {
-        private readonly ServerData _serverData;
-
-        public StaticResourcePostWebRequestHandler(ServerData serverData)
+    internal class StaticResourcePostWebRequestHandler : WebRequestHandlerBase, IWebRequestHandler
+    {        
+        public StaticResourcePostWebRequestHandler(IFileCacheService fileCacheService,
+                                                ServerData serverData) : base(fileCacheService, serverData)
         {
-            _serverData = serverData;
+            
         }
 
         public bool CanHandle(RequestContext requestContext)
@@ -29,8 +28,10 @@ namespace CFWebServer.WebRequestHandlers
                 throw new ArgumentException("Unable to handle request");
             }
 
+            var relativePath = requestContext.Request.Url.AbsolutePath;
+
             // Getlocal path
-            var localResourcePath = HttpUtilities.GetResourceLocalPath(_serverData.RootFolder, requestContext.Request.Url.AbsolutePath);
+            var localResourcePath = GetResourceLocalPath(relativePath);
 
             // Write            
             var request = requestContext.Request;
@@ -44,6 +45,13 @@ namespace CFWebServer.WebRequestHandlers
 
             response.StatusCode = (int)HttpStatusCode.OK;
             response.Close();
+
+            // Update cache file if exists
+            var cacheFile = _fileCacheService.Get(relativePath);
+            if (cacheFile != null)
+            {                
+                _fileCacheService.Add(relativePath, new byte[0], new FileInfo(localResourcePath).LastWriteTimeUtc);
+            }
         }
     }
 }

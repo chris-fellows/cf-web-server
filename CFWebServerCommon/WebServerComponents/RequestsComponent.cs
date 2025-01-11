@@ -1,4 +1,5 @@
-﻿using CFWebServer.Interfaces;
+﻿using CFWebServer.Enums;
+using CFWebServer.Interfaces;
 using CFWebServer.Models;
 
 namespace CFWebServer.WebServerComponents
@@ -14,23 +15,23 @@ namespace CFWebServer.WebServerComponents
         private readonly ICacheService _cacheService;
         private readonly IFileCacheService _fileCacheService;
         private readonly ILogWriter _logWriter;
-        private readonly ServerData _serverData;
+        private readonly ServerData _serverData;        
         private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
         private CancellationToken _cancellationToken;
 
         public RequestsComponent(ICacheService cacheService,
                             IFileCacheService fileCacheService,
                             ILogWriter logWriter,
-                            ServerData serverData,
+                            ServerData serverData,                            
                             IWebRequestHandlerFactory webRequestHandlerFactory,
                             CancellationToken cancellationToken)
         {
             _cacheService = cacheService;
             _fileCacheService = fileCacheService;
             _logWriter = logWriter;
-            _serverData = serverData;
+            _serverData = serverData;            
             _webRequestHandlerFactory = webRequestHandlerFactory;
-            _cancellationToken = cancellationToken;
+            _cancellationToken = cancellationToken;          
         }
 
         public void Start()
@@ -63,10 +64,10 @@ namespace CFWebServer.WebServerComponents
             DateTimeOffset lastCheckFileCacheTask = DateTimeOffset.MinValue;
 
             TimeSpan logStatisticsInterval = TimeSpan.FromMinutes(5);
-            DateTimeOffset lastLogStatistics = DateTimeOffset.MinValue;
+            DateTimeOffset lastLogStatistics = DateTimeOffset.MinValue;          
 
             while (!_cancellationToken.IsCancellationRequested)
-            {
+            {               
                 // Process next queued request if any
                 if (_serverData.ActiveRequestContexts.Count < _serverData.SiteConfig.MaxConcurrentRequests)
                 {
@@ -87,7 +88,8 @@ namespace CFWebServer.WebServerComponents
                 }
 
                 // Start task to removed expired cached files
-                if (checkFileCacheTask == null &&
+                if (checkFileCacheInterval > TimeSpan.Zero &&
+                    checkFileCacheTask == null &&
                     lastCheckFileCacheTask.Add(checkFileCacheInterval) <= DateTimeOffset.UtcNow)
                 {
                     lastCheckFileCacheTask = DateTimeOffset.UtcNow;
@@ -100,7 +102,8 @@ namespace CFWebServer.WebServerComponents
                 }
 
                 // Periodically log statistics
-                if (lastLogStatistics.Add(logStatisticsInterval) <= DateTimeOffset.UtcNow)
+                if (logStatisticsInterval > TimeSpan.Zero &&
+                    lastLogStatistics.Add(logStatisticsInterval) <= DateTimeOffset.UtcNow)
                 {
                     lastLogStatistics = DateTimeOffset.UtcNow;
                     LogStatistics(_serverData.Statistics);
@@ -108,8 +111,10 @@ namespace CFWebServer.WebServerComponents
 
                 Thread.Yield();
             }
-        }
 
+            int xxx = 1000;
+        }
+     
         /// <summary>
         /// Logs statistics
         /// </summary>

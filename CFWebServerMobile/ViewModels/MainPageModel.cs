@@ -23,9 +23,9 @@ namespace CFWebServerMobile.ViewModels
                      PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         private readonly ICacheService _cacheService;
-        private readonly IFileCacheService _fileCacheService;
-        private readonly IFolderConfigService _folderConfigService;
+        private readonly IFileCacheService _fileCacheService;        
         private readonly ILogWriter _logWriter;
+        private readonly IServerEventQueue _serverEventQueue,
         private readonly ISiteConfigService _siteConfigService;
         private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
 
@@ -40,18 +40,18 @@ namespace CFWebServerMobile.ViewModels
         private string _errorMessage = "None";
 
         public MainPageModel(ICacheService cacheService,
-                                IFileCacheService fileCacheService,
-                                IFolderConfigService folderConfigService,
+                                IFileCacheService fileCacheService,                                
                                 ILogWriter logWriter,
+                                IServerEventQueue serverEventQueue,
                                 ISiteConfigService siteConfigService,
                                 IWebRequestHandlerFactory webRequestHandlerFactory)
         {            
                 InternalUtilities.Log("MainPageModel.Constructor : Entered");
 
                 _cacheService = cacheService;
-                _fileCacheService = fileCacheService;
-                _folderConfigService = folderConfigService;
+                _fileCacheService = fileCacheService;                
                 _logWriter = logWriter;
+                _serverEventQueue = serverEventQueue;
                 _siteConfigService = siteConfigService;
                 _webRequestHandlerFactory = webRequestHandlerFactory;
 
@@ -104,10 +104,11 @@ namespace CFWebServerMobile.ViewModels
                 _cancellationTokenSource = new CancellationTokenSource();
 
                 _webServer = new WebServer(_cacheService,
-                        _fileCacheService,
-                        _folderConfigService,
+                        _fileCacheService,                        
                         _logWriter,
                         serverData,
+                        _serverEventQueue, 
+                        _siteConfigService,
                         _webRequestHandlerFactory,
                         _cancellationTokenSource.Token);
 

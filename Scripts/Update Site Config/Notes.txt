@@ -1,0 +1,7 @@
+Updates site config
+
+Instructions
+------------
+- Create site config .json file. E.g. SiteConfig1.json
+- Run .cmd file.
+- When prompted then enter path to .json file.

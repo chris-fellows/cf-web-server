@@ -1,0 +1,16 @@
+{
+    "id": null,
+    "createdDateTime": "2024-10-20T02:00:00+02:00",
+	"eventTypeId": "1",
+	"eventClientId": "1",
+	"parameters": [
+		{
+			"name": "CompanyId",			
+			"value": 1
+		},
+		{
+			"name": "Value2",			
+			"value": true
+		}	
+	]	
+}

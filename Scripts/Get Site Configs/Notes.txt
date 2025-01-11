@@ -1,0 +1,5 @@
+Get site configs
+
+Instructions
+------------
+- Run .cmd file.

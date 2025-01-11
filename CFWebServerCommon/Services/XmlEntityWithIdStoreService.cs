@@ -50,6 +50,12 @@ namespace CFWebServer.Services
                     XmlUtilities.DeserializeFromString<TEntityType>(File.ReadAllText(file)) : default(TEntityType);
         }
 
+        public void Add(TEntityType entity)
+        {
+            var file = Path.Combine(_folder, _getEntityFileNameByEntityFunction(entity));
+            File.WriteAllText(file, XmlUtilities.SerializeToString(entity));
+        }
+
         public void Update(TEntityType entity)
         {
             var file = Path.Combine(_folder, _getEntityFileNameByEntityFunction(entity));

@@ -3,7 +3,7 @@
     /// <summary>
     /// File cache config
     /// </summary>
-    public class FileCacheConfig
+    public class FileCacheConfig : ICloneable
     {   
         /// <summary>
         /// Whether to compress files by default. Files that are already compressed (E.g. .zip) will
@@ -25,5 +25,17 @@
         /// Cache expiry (0=Cache disabled)
         /// </summary>
         public TimeSpan Expiry { get; set; }
+
+        public object Clone()
+        {
+            var fileCacheConfig = new FileCacheConfig()
+            {
+                Compressed = Compressed,
+                MaxTotalSizeBytes = MaxTotalSizeBytes,
+                MaxFileSizeBytes = MaxFileSizeBytes,
+                Expiry = Expiry
+            };
+            return fileCacheConfig;
+        }
     }
 }

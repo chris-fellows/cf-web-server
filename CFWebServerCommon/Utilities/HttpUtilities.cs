@@ -31,7 +31,7 @@ namespace CFWebServer.Utilities
 
         public static string GetResourceLocalPath(string rootFolder, string url)
         {
-            // Set local patj            
+            // Set local path          
             var elements = url.Split('/');
 
             var localPath = rootFolder;
@@ -41,6 +41,12 @@ namespace CFWebServer.Utilities
             }
 
             return localPath;
+        }
+
+        public static string GetUrlWithoutLastElement(string url)
+        {
+            // TODO: FIx this
+            return url;
         }
     }
 }

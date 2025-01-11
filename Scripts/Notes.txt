@@ -1,0 +1,16 @@
+Contains various scripts.
+
+Common folder contains shared scripts and environment config files.
+
+Please see Build Scripts\Notes.txt for instructions on building script projects.
+
+To use the common script GetHTTPResponse.ps1 (Requires .json file containing HTTP request details) then
+see Log Event as an example. GetHTTPResponse.ps1 can also prompt the user for parameters to send inside
+the HTTP request.
+
+To Create a New Script
+----------------------
+- Create a new folder.
+- Create Notes.txt & Project.json
+- Create a .cmd file for each environment that calls the PowerShell script.
+- To use common script then create empty file "GetHTTPResponse.ps1.dependency" (or similar).

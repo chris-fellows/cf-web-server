@@ -13,11 +13,16 @@ namespace CFWebServer.Interfaces
     public interface IWebRequestHandler
     {
         /// <summary>
-        /// Whether instance can handle request
+        /// Unique name
         /// </summary>
-        /// <param name="requestContext"></param>
-        /// <returns></returns>
-        bool CanHandle(RequestContext requestContext);
+        public string Name { get; }
+
+        ///// <summary>
+        ///// Whether instance can handle request
+        ///// </summary>
+        ///// <param name="requestContext"></param>
+        ///// <returns></returns>
+        //bool CanHandle(RequestContext requestContext);
 
         /// <summary>
         /// Handles request

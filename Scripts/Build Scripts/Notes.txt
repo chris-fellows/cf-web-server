@@ -1,0 +1,6 @@
+Builds script projects and copies them to output folder.
+
+Instructions
+------------
+- Edit Build Scripts\BuildScripts.cmd and set correct output path.
+- Run Build Scripts\BuildScripts.cmd

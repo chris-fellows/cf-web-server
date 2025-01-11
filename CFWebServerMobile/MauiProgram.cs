@@ -1,4 +1,5 @@
 ﻿using CFWebServer;
+using CFWebServer.Enums;
 using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using CFWebServer.Services;
@@ -25,13 +26,15 @@ namespace CFWebServerMobile
             var configFolder = Path.Combine(FileSystem.AppDataDirectory, "Config");            
 
             //builder.Services.AddSingleton<IWebServer, IWebServer>();
-            builder.Services.AddSingleton<IWebRequestHandlerFactory, WebRequestHandlerFactory>();            
+            builder.Services.AddSingleton<IWebRequestHandlerFactory, WebRequestHandlerFactory>();
+
+            builder.Services.AddSingleton<IServerEventQueue, ServerEventQueue>();
 
             // Set config data services
-            builder.Services.AddSingleton<IFolderConfigService>((scope) =>
-            {
-                return new XmlFolderConfigService(Path.Combine(configFolder, "FolderConfig"));
-            });
+            //builder.Services.AddSingleton<IFolderConfigService>((scope) =>
+            //{
+            //    return new XmlFolderConfigService(Path.Combine(configFolder, "FolderConfig"));
+            //});
             builder.Services.AddSingleton<ISiteConfigService>((scope) =>
             {
                 var siteConfigService = new XmlSiteConfigService(Path.Combine(configFolder, "SiteConfig"));
@@ -50,6 +53,7 @@ namespace CFWebServerMobile
                         Name = "Test 1",
                         DefaultFile = "Index.html",
                         MaxConcurrentRequests = 20,
+                        Enabled = true,                        
                         RootFolder = Path.Combine(sitesFolder, "Test1"),
                         Site = "http://localhost:10010/",
                         //Site = "http://192.168.1.48:10010/",
@@ -59,6 +63,18 @@ namespace CFWebServerMobile
                             Expiry = TimeSpan.Zero,     // Cache disabled,
                             MaxFileSizeBytes = 1024 * 1000,
                             MaxTotalSizeBytes = 1024 * 10000
+                        },
+                        FolderConfigs = new List<FolderConfig>()
+                        {
+                            new FolderConfig()
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                RelativePath = "/",     // Root
+                                Permissions = new List<FolderPermissions>()
+                                {
+                                    FolderPermissions.Read
+                                }                                 
+                            }
                         }
                     };
                     siteConfigService.Update(siteConfig);

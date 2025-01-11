@@ -2,8 +2,8 @@
 
 Basic web server. Currently only serves static resources.
 
-Each process logically supports multiple websites but the command line only supports parameters for a 
-single website. It would just need changes to read the websites from a config file.
+The web server runs an internal website that is used for configuring websites. It can be managed via the
+scripts in the Scripts folder.
 
 # CFWebServerCommon (Class library)
 This is a class library containing the web server components.
@@ -11,13 +11,24 @@ This is a class library containing the web server components.
 # CFWebServerConsole (Console app)
 This is a console app for running the web server.
 
+It can run in the following modes:
+1) Run single website that has a site config. Uses /site-config-id command line parameter.
+2) Run single website with no site config. Parameters are set on the command line.
+3) Run all websites with a site config. Default if none of the above is set.
+
 # CFWebServerMobile (.NET Maui app)
 This is an .NET Maui app for running the web server. Currently it only run on Android.
+
+# Scripts folder
+This folder contains scripts for the following:
+1) Get site configs.
+2) Update site config.
 
 # Command Line
 Command line supports running only one website.
 
 Parameter					Description
+- /all-sites				Runs all websites with a site config
 - /default-file				Default file for / request. E.g. Index.html
 - /file-cache-compressed	Whether to store cache files as compressed. Default if not specified.
 - /file-cache-expiry-secs	Number of secs since cache file last used after which it is expired. If file is
@@ -31,8 +42,9 @@ Parameter					Description
 							If "{process-path}\TestSite" is specified then the it will replace {process-path}
 							with the path to the exe file.
 - /site						Site to host. E.g. http://localhost:10010						
+- /site-config-id			Use existing site config
 
-Example:
+Example to run website with a site config:
 /site="http://localhost:10010"
 /root="{process-path}\Sites\Test1" 
 /default-file="Index.html"
@@ -40,3 +52,9 @@ Example:
 /file-cache-expiry-mins=30 
 /max-concurrent-requests=15
 /max-file-cache-size=10000024
+
+Example to run a website for an existing site config:
+/site-config-id="123456"
+
+# Internal Web Site
+An internal web site is hosted so that sites can be configured via HTTP.

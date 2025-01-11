@@ -1,6 +1,8 @@
-﻿using CFWebServer.Interfaces;
+﻿using CFWebServer.Enums;
+using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using CFWebServer.Utilities;
+using System.ComponentModel.DataAnnotations;
 
 namespace CFWebServer.WebRequestHandlers
 {
@@ -51,6 +53,32 @@ namespace CFWebServer.WebRequestHandlers
             var localResourcePath = HttpUtilities.GetResourceLocalPath(_serverData.SiteConfig.RootFolder, relativePath);
 
             return localResourcePath;
+        }
+
+        /// <summary>
+        /// Whether action is allowed for required permission
+        /// </summary>
+        /// <param name="relativePath"></param>
+        /// <param name="requiredFolderPermission"></param>
+        /// <returns></returns>
+        protected bool IsActionAllowedForFolderPermission(string relativePath, FolderPermissions requiredFolderPermission)
+        {
+            var folderConfig = _serverData.SiteConfig.FolderConfigs.FirstOrDefault(fc => fc.RelativePath == relativePath);
+            if (folderConfig == null)
+            {
+                var elements = relativePath.Split('/');
+
+                // TODO: Get parent folder config
+            }
+
+            if (folderConfig == null)   // No parent folder config (Not even at root)
+            {
+                return true;
+            }
+            else
+            {
+                return folderConfig.Permissions.Contains(requiredFolderPermission);
+            }
         }
     }
 }

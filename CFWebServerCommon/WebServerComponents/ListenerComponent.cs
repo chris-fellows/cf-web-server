@@ -68,7 +68,7 @@ namespace CFWebServer.WebServerComponents
             }
 
             _logWriter.Log("Stopping listening");
-        }
+        }     
 
         public void WorkerThread()
         {

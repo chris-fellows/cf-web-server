@@ -1,0 +1,10 @@
+GetHTTPResponse.ps1
+-------------------
+The script accepts a .json file containing HTTP request details and then sends the request. It can also prompt
+the user for parameters. E.g. Path to file containing HTTP content.
+
+Parameter Type		Description
+--------------		-----------
+Prompt			Prompts user for value.
+Literal			Uses literal value.
+CurrentFile		Prompts user for current file. Must exist.

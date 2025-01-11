@@ -1,4 +1,6 @@
-﻿using CFWebServer.Interfaces;
+﻿using CFWebServer.Constants;
+using CFWebServer.Enums;
+using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using CFWebServer.Utilities;
 using System.Net;
@@ -16,17 +18,19 @@ namespace CFWebServer.WebRequestHandlers
             
         }
 
-        public bool CanHandle(RequestContext requestContext)
-        {
-            return requestContext.Request.HttpMethod == "PUT";
-        }
+        public string Name => WebRequestHandlerNames.StaticResourcePut;
+
+        //public bool CanHandle(RequestContext requestContext)
+        //{
+        //    return requestContext.Request.HttpMethod == "PUT";
+        //}
 
         public async Task HandleAsync(RequestContext requestContext)
         {
-            if (!CanHandle(requestContext))
-            {
-                throw new ArgumentException("Unable to handle request");
-            }
+            //if (!CanHandle(requestContext))
+            //{
+            //    throw new ArgumentException("Unable to handle request");
+            //}
 
             var relativePath = requestContext.Request.Url.AbsolutePath;
 
@@ -37,20 +41,28 @@ namespace CFWebServer.WebRequestHandlers
             var request = requestContext.Request;
             var response = requestContext.Response;
 
-            using (var fileStream = new FileStream(localResourcePath, FileMode.OpenOrCreate))
+            if (IsActionAllowedForFolderPermission(HttpUtilities.GetUrlWithoutLastElement(relativePath), FolderPermissions.Write))
             {
-                await request.InputStream.CopyToAsync(fileStream);
-                await fileStream.FlushAsync();
+                using (var fileStream = new FileStream(localResourcePath, FileMode.OpenOrCreate))
+                {
+                    await request.InputStream.CopyToAsync(fileStream);
+                    await fileStream.FlushAsync();
+                }
+
+                response.StatusCode = (int)HttpStatusCode.OK;
+                response.Close();
+
+                // Update cache file if exists
+                var cacheFile = _fileCacheService.Get(relativePath);
+                if (cacheFile != null)
+                {
+                    _fileCacheService.Add(relativePath, new byte[0], new FileInfo(localResourcePath).LastWriteTimeUtc);
+                }
             }
-
-            response.StatusCode = (int)HttpStatusCode.OK;
-            response.Close();
-
-            // Update cache file if exists
-            var cacheFile = _fileCacheService.Get(relativePath);
-            if (cacheFile != null)
+            else
             {
-                _fileCacheService.Add(relativePath, new byte[0], new FileInfo(localResourcePath).LastWriteTimeUtc);
+                response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                response.Close();
             }
         }
     }

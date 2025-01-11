@@ -9,24 +9,15 @@
         ///// Site. E.g. http://localhost:10010
         ///// </summary>
         //public string Site { get; internal set; }
+       
+        /// <summary>
+        /// Site config
+        /// </summary>
+        public SiteConfig SiteConfig { get; set; }
 
-        ///// <summary>
-        ///// Root folder
-        ///// </summary>
-        //public string RootFolder { get; internal set; } = String.Empty;
-
-        ///// <summary>
-        ///// Default file for / request
-        ///// </summary>
-        //public string DefaultFile { get; internal set; } = String.Empty;
-
-        ///// <summary>
-        ///// Max concurrent requests
-        ///// </summary>
-        //public int MaxConcurrentRequests { get; internal set; }
-
-        public SiteConfig SiteConfig { get; internal set; }
-
+        /// <summary>
+        /// Interval to log statistics
+        /// </summary>
         public TimeSpan LogStatisticsInterval { get; internal set; }
 
         /// <summary>
@@ -47,32 +38,12 @@
         /// <summary>
         /// Server statistics
         /// </summary>
-        public ServerStatistics Statistics { get; internal set; }
-
-        ///// <summary>
-        ///// File cache config
-        ///// </summary>
-        //public FileCacheConfig CacheFileConfig { get; internal set; }        
+        public ServerStatistics Statistics { get; internal set; }       
 
         public ServerData(TimeSpan logStatisticsInterval,
                         SiteConfig siteConfig)
-        {          
-        
-            /*
-            CacheFileConfig = new FileCacheConfig()
-            {
-                Compressed = fileCacheCompressed,
-                Expiry = fileCacheExpiry,
-                MaxFileSizeBytes = maxCachedFileBytes,
-                MaxTotalSizeBytes = maxFileCacheBytes
-            };
-            */
-
-            //DefaultFile = defaultFile;
-            LogStatisticsInterval = logStatisticsInterval;
-            //MaxConcurrentRequests = maxConcurrentRequests;
-            //RootFolder = rootFolder;
-            //Site = site;
+        {                 
+            LogStatisticsInterval = logStatisticsInterval;            
             SiteConfig = siteConfig;
             Statistics = new ServerStatistics();
         }

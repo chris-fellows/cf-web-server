@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CFWebServer.Interfaces
+﻿namespace CFWebServer.Interfaces
 {
     /// <summary>
     /// Interface to web server
@@ -13,6 +7,6 @@ namespace CFWebServer.Interfaces
     {
         void Start();
 
-        void Stop();
+        void Stop();       
     }
 }

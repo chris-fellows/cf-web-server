@@ -21,6 +21,12 @@
         TEntityType? GetById(TIDType id);
 
         /// <summary>
+        /// Add entity
+        /// </summary>
+        /// <param name="entity"></param>
+        void Add(TEntityType entity);
+
+        /// <summary>
         /// Update entity
         /// </summary>
         /// <param name="entity"></param>

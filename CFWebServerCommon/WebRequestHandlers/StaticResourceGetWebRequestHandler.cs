@@ -14,7 +14,8 @@ namespace CFWebServer.WebRequestHandlers
     public class StaticResourceGetWebRequestHandler : WebRequestHandlerBase,  IWebRequestHandler
     {        
         public StaticResourceGetWebRequestHandler(IFileCacheService fileCacheService,
-                                            ServerData serverData) : base(fileCacheService, serverData)
+                                            IMimeTypeDatabase mimeTypeDatabase,
+                                            ServerData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
             
         }
@@ -49,6 +50,9 @@ namespace CFWebServer.WebRequestHandlers
                     cacheFile = null;
                 }
 
+                // Get mime type info
+                var mimeTypeInfo = _mimeTypeDatabase.GetByFileExtension(HttpUtilities.GetUrlFileExtension(relativePath)).FirstOrDefault();
+
                 if (cacheFile == null)    // File not cached
                 {
                     // Getlocal path
@@ -59,7 +63,7 @@ namespace CFWebServer.WebRequestHandlers
                         var content = File.ReadAllBytes(localResourcePath);
 
                         response.StatusCode = (int)HttpStatusCode.OK;
-                        //response.ContentType = "";                    
+                        response.ContentType = mimeTypeInfo == null ? "" : mimeTypeInfo.MimeType;
                         response.ContentEncoding = Encoding.UTF8;
                         response.ContentLength64 = content.LongLength;
 
@@ -79,7 +83,7 @@ namespace CFWebServer.WebRequestHandlers
 
                     var content = cacheFile.GetContent();
 
-                    //response.ContentType = "";                    
+                    response.ContentType = mimeTypeInfo == null ? "" : mimeTypeInfo.MimeType;
                     response.ContentEncoding = Encoding.UTF8;
                     response.ContentLength64 = content.LongLength;
 

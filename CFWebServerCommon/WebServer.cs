@@ -12,7 +12,7 @@ namespace CFWebServer
     {
         private readonly ICacheService _cacheService;
         private readonly IFileCacheService _fileCacheService;        
-        private readonly ILogWriter _logWriter;
+        private readonly ILogWriter _logWriter;       
         private readonly ServerData _serverData;
         private readonly IServerEventQueue _serverEventQueue;
         private readonly ISiteConfigService _siteConfigService;
@@ -23,8 +23,8 @@ namespace CFWebServer
         private CancellationToken _cancellationToken;
 
         public WebServer(ICacheService cacheService,
-                         IFileCacheService fileCacheService,                            
-                            ILogWriter logWriter, 
+                            IFileCacheService fileCacheService,                            
+                            ILogWriter logWriter,                             
                             ServerData serverData,
                             IServerEventQueue serverEventQueue,
                             ISiteConfigService siteConfigService,
@@ -43,7 +43,7 @@ namespace CFWebServer
 
             _cacheService = cacheService;
             _fileCacheService = fileCacheService;            
-            _logWriter = logWriter;
+            _logWriter = logWriter;            
             _serverData = serverData;
             _serverEventQueue = serverEventQueue;
             _siteConfigService = siteConfigService;

@@ -13,7 +13,8 @@ namespace CFWebServer.WebRequestHandlers
     public class StaticResourcePostWebRequestHandler : WebRequestHandlerBase, IWebRequestHandler
     {        
         public StaticResourcePostWebRequestHandler(IFileCacheService fileCacheService,
-                                                ServerData serverData) : base(fileCacheService, serverData)
+                                                IMimeTypeDatabase mimeTypeDatabase,
+                                                ServerData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
             
         }

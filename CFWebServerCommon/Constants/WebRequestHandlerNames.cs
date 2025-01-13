@@ -18,6 +18,8 @@ namespace CFWebServer.Constants
         public const string UpdateSiteConfig = "UPDATE_SITE_CONFIG";
         public const string TestCustomGet = "TEST_CUSTOM_GET";
 
-        public const string NotFound = "NOT_FOUND";
+        // General
+        public const string StatusCodeNotFound = "NOT_FOUND";
+        public const string StatusCodeUnauthorized = "UNAUTHORIZED";
     }
 }

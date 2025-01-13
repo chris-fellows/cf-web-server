@@ -2,15 +2,13 @@
 using CFWebServer.Constants;
 using CFWebServer.Interfaces;
 using CFWebServer.Models;
-using CFWebServer.WebRequestHandlers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace CFWebServerCommon.WebRequestHandlers
+namespace CFWebServer.WebRequestHandlers
 {
     /// <summary>
     /// Handles update of site config. E.g. Update folder permissions
@@ -20,8 +18,9 @@ namespace CFWebServerCommon.WebRequestHandlers
         private readonly ISiteConfigService _siteConfigService;
 
         public UpdateSiteConfigWebRequestHandler(IFileCacheService fileCacheService,                                                
+                                                IMimeTypeDatabase mimeTypeDatabase,
                                                 ServerData serverData,
-                                                ISiteConfigService siteConfigService) : base(fileCacheService, serverData)
+                                                ISiteConfigService siteConfigService) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
             _siteConfigService = siteConfigService;
         }
@@ -69,6 +68,8 @@ namespace CFWebServerCommon.WebRequestHandlers
                 {
                     Directory.CreateDirectory(siteConfig.RootFolder);
                 }
+
+                response.StatusCode = (int)HttpStatusCode.OK;
             }          
         }
     }

@@ -48,5 +48,11 @@ namespace CFWebServer.Utilities
             // TODO: FIx this
             return url;
         }
+
+        public static string GetUrlFileExtension(string url)
+        {
+            var elements = url.Split('/');
+            return elements.Last().Split('.').Last();
+        }
     }
 }

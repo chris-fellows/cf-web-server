@@ -1,9 +1,9 @@
 ﻿using CFWebServer;
+using CFWebServer.AuthorizationManagers;
 using CFWebServer.Constants;
 using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using CFWebServer.Services;
-using CFWebServerCommon.Models;
 
 // NOTES:
 // - We start in one of the following modes:
@@ -14,9 +14,17 @@ using CFWebServerCommon.Models;
 //   is independent.
 // - We create an internal website which handles site config requests. E.g. Add site, update site permissions.
 
+//new MimeDatabaseCreator().Create("D:\\Data\\Dev\\MIME types\\MIME Types.txt", "D:\\Data\\Dev\\MIME types\\MimeDatabase.cs");
+
 // Create log writer
 var logWriter = new DefaultLogWriter();
 logWriter.Log("Starting CF Web Server");
+
+var authorizationManagers = new List<IAuthorizationManager>()
+{
+    new ApiKeyAuthorizationManager(),
+    //new BearerAuthorizationManager()
+};
 
 // Set default site config
 var siteConfig = new SiteConfig()
@@ -36,6 +44,8 @@ var siteConfig = new SiteConfig()
     }
 };
 
+// Set MIME type database
+var mimeTypeDatabase = new StaticMimeTypeInfoDatabase();
 
 // Set folder for config data
 var configFolder = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Config");
@@ -155,6 +165,9 @@ var fileCacheServiceInternal = new LocalMemoryFileCache(cacheServiceInternal, si
 // Set server data
 var serverDataInternal = new ServerData(TimeSpan.Zero, siteConfigInternal);
 
+// TODO: Pick up API key from config
+var internalAPIKey = "111111";
+
 // Set route rules
 var routeRulesInternal = new List<RouteRule>()
 {
@@ -166,6 +179,15 @@ var routeRulesInternal = new List<RouteRule>()
         RelativePaths = new List<string>()
         {
             "/siteConfig"
+        },
+        AuthorizationRules = new List<AuthorizationRule>()
+        {
+            new AuthorizationRule()
+            {
+                HeaderName = "Authorization",
+                Scheme = "Apikey",       // Apikey [key], Bearer [JWT]
+                Value = internalAPIKey
+            }
         }
     },
     new RouteRule()
@@ -175,16 +197,26 @@ var routeRulesInternal = new List<RouteRule>()
         RelativePaths = new List<string>()
         {
             "/siteConfig"
+        },
+        AuthorizationRules = new List<AuthorizationRule>()
+        {
+            new AuthorizationRule()
+            {                
+                HeaderName = "Authorization",
+                Scheme = "Apikey",      // Apikey [key], Bearer [JWT]
+                Value = internalAPIKey
+            }
         }
     }
 };
 
-IWebRequestHandlerFactory webRequestHandlerFactoryInternal = new WebRequestHandlerFactory(fileCacheServiceInternal, routeRulesInternal, siteConfigService);
+IWebRequestHandlerFactory webRequestHandlerFactoryInternal = new WebRequestHandlerFactory(authorizationManagers, fileCacheServiceInternal, 
+                                                            mimeTypeDatabase, routeRulesInternal, siteConfigService);
 
 // Initialise web server for internal
 var webServerInternal = new WebServer(cacheServiceInternal,
                                 fileCacheServiceInternal,
-                                logWriter,
+                                logWriter,                                
                                 serverDataInternal,
                                 serverEventQueue,
                                 siteConfigService,
@@ -234,12 +266,13 @@ foreach (var currentSiteConfig in siteConfigsToStart)
     };
 
     // Set web request handler factory
-    IWebRequestHandlerFactory webRequestHandlerFactory = new WebRequestHandlerFactory(fileCacheService, routeRules, siteConfigService);
+    IWebRequestHandlerFactory webRequestHandlerFactory = new WebRequestHandlerFactory(authorizationManagers, fileCacheService, 
+                                                                    mimeTypeDatabase, routeRules, siteConfigService);
 
     // Initialise web server
     var webServer = new WebServer(cacheService,
                                     fileCacheService,
-                                    logWriter,
+                                    logWriter,                                    
                                     serverData,
                                     serverEventQueue,
                                     siteConfigService,

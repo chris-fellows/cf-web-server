@@ -2,7 +2,6 @@
 using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using CFWebServer.Utilities;
-using System.ComponentModel.DataAnnotations;
 
 namespace CFWebServer.WebRequestHandlers
 {
@@ -12,11 +11,13 @@ namespace CFWebServer.WebRequestHandlers
     public abstract class WebRequestHandlerBase
     {
         protected readonly IFileCacheService _fileCacheService;
+        protected readonly IMimeTypeDatabase _mimeTypeDatabase;
         protected readonly ServerData _serverData;
 
-        public WebRequestHandlerBase(IFileCacheService fileCacheService, ServerData serverData)
+        public WebRequestHandlerBase(IFileCacheService fileCacheService, IMimeTypeDatabase mimeTypeDatabase, ServerData serverData)
         {
             _fileCacheService = fileCacheService;
+            _mimeTypeDatabase = mimeTypeDatabase;
             _serverData = serverData;
         } 
         

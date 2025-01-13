@@ -12,7 +12,8 @@ namespace CFWebServer.WebRequestHandlers
     public class TestCustomGetWebRequestHandler : WebRequestHandlerBase, IWebRequestHandler
     {
         public TestCustomGetWebRequestHandler(IFileCacheService fileCacheService,
-                                            ServerData serverData) : base(fileCacheService, serverData)
+                                            IMimeTypeDatabase mimeTypeDatabase,
+                                            ServerData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
 
         }

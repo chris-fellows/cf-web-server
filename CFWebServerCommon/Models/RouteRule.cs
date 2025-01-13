@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CFWebServerCommon.Models
+﻿namespace CFWebServer.Models
 {
     /// <summary>
     /// Defines a route rule which maps an incoming request to a web request handler
@@ -21,10 +15,10 @@ namespace CFWebServerCommon.Models
         /// </summary>
         public List<string> RelativePaths = new List<string>();
 
-        ///// <summary>
-        ///// Valid API keys
-        ///// </summary>
-        //public List<string> APIKeys = new List<string>();
+        /// <summary>
+        /// Authorization rules that route rule is valid for
+        /// </summary>
+        public List<AuthorizationRule>? AuthorizationRules = null;
 
         /// <summary>
         /// Web request handler to handle request

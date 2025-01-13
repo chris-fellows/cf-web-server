@@ -2,7 +2,6 @@
 using CFWebServer.Constants;
 using CFWebServer.Interfaces;
 using CFWebServer.Models;
-using CFWebServer.WebRequestHandlers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +9,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CFWebServerCommon.WebRequestHandlers
+namespace CFWebServer.WebRequestHandlers
 {
     /// <summary>
     /// Handles request for site configs
@@ -20,8 +19,9 @@ namespace CFWebServerCommon.WebRequestHandlers
         private readonly ISiteConfigService _siteConfigService;
 
         public GetSiteConfigsWebRequestHandler(IFileCacheService fileCacheService,
+                                                IMimeTypeDatabase mimeTypeDatabase,
                                                 ServerData serverData,
-                                                ISiteConfigService siteConfigService) : base(fileCacheService, serverData)
+                                                ISiteConfigService siteConfigService) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
             _siteConfigService = siteConfigService;
         }

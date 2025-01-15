@@ -1,16 +1,26 @@
 {
-    "id": null,
-    "createdDateTime": "2024-10-20T02:00:00+02:00",
-	"eventTypeId": "1",
-	"eventClientId": "1",
-	"parameters": [
+    "id": null,    
+	"name": "Site 1",
+	"defaultFile": "Index.html",
+	"maxConcurrentRequests": 10,
+	"rootFolder": "",
+	"site": "http://localhost:10010/",	
+	"enabled": true,
+	"cacheFileConfig": {
+		"compresses": true,
+		"expiry": 900,
+		"maxFileSizeBytes": 1024000,
+		"maxTotalSizeBytes": 10240000
+	},	
+	"authorizationRules": [	
+	],
+	"folderConfigs": [
 		{
-			"name": "CompanyId",			
-			"value": 1
-		},
-		{
-			"name": "Value2",			
-			"value": true
-		}	
+			"id": "1",
+			"relativePath": "/",
+			"permissions": [ "read", "write" ]
+		}
+	],
+	"routeRules": [
 	]	
 }

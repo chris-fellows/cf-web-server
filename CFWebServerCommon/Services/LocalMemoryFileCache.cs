@@ -1,6 +1,5 @@
 ﻿using CFWebServer.Interfaces;
 using CFWebServer.Models;
-using System.ComponentModel.DataAnnotations;
 
 namespace CFWebServer.Services
 {

@@ -19,7 +19,9 @@ namespace CFWebServer.AuthorizationManagers
 
             //var headerValue = request.Headers[authorizationRule.HeaderName];
 
-            //return headerValue == $"{Scheme} {(string)authorizationRule.Value}";
+            // var requestBearerRole = "";     // TODO: Read this
+            // 
+            // return requestBearerRole == authorizationRule.BearerRole;
         }
     }
 }

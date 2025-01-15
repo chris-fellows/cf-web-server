@@ -21,19 +21,9 @@ namespace CFWebServer.WebRequestHandlers
         }
 
         public string Name => WebRequestHandlerNames.StaticResourceGet;
-
-        //public bool CanHandle(RequestContext requestContext)
-        //{
-        //    return requestContext.Request.HttpMethod == "GET";
-        //}            
-
+        
         public async Task HandleAsync(RequestContext requestContext)
-        {
-            //if (!CanHandle(requestContext))
-            //{
-            //    throw new ArgumentException("Unable to handle request");
-            //}
-
+        {         
             var response = requestContext.Response;
 
             var relativePath = requestContext.Request.Url.AbsolutePath;
@@ -41,7 +31,7 @@ namespace CFWebServer.WebRequestHandlers
             if (IsActionAllowedForFolderPermission(HttpUtilities.GetUrlWithoutLastElement(relativePath), FolderPermissions.Read))
             {
                 // Get cache file if exists
-                var cacheFile = _fileCacheService.Get(relativePath);
+                var cacheFile = _fileCacheService.Enabled ? _fileCacheService.Get(relativePath) : null;
 
                 // Remove cached file if not latest
                 if (cacheFile != null && IsCacheFileNotTheLatest(cacheFile))
@@ -70,7 +60,10 @@ namespace CFWebServer.WebRequestHandlers
                         await response.OutputStream.WriteAsync(content, 0, content.Length);
 
                         // Cache file                    
-                        _fileCacheService.Add(relativePath, content, new FileInfo(localResourcePath).LastWriteTimeUtc);
+                        if (_fileCacheService.Enabled)
+                        {
+                            _fileCacheService.Add(relativePath, content, new FileInfo(localResourcePath).LastWriteTimeUtc);
+                        }
                     }
                     else
                     {
@@ -78,11 +71,10 @@ namespace CFWebServer.WebRequestHandlers
                     }
                 }
                 else    // File cached
-                {
-                    response.StatusCode = (int)HttpStatusCode.OK;
-
+                {                    
                     var content = cacheFile.GetContent();
 
+                    response.StatusCode = (int)HttpStatusCode.OK;
                     response.ContentType = mimeTypeInfo == null ? "" : mimeTypeInfo.MimeType;
                     response.ContentEncoding = Encoding.UTF8;
                     response.ContentLength64 = content.LongLength;

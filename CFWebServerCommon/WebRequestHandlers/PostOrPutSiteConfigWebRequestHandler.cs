@@ -13,19 +13,22 @@ namespace CFWebServer.WebRequestHandlers
     /// <summary>
     /// Handles update of site config. E.g. Update folder permissions
     /// </summary>
-    public class UpdateSiteConfigWebRequestHandler : WebRequestHandlerBase, IWebRequestHandler
+    public class PostOrPutSiteConfigWebRequestHandler : WebRequestHandlerBase, IWebRequestHandler
     {
+        private readonly string _name;
         private readonly ISiteConfigService _siteConfigService;
 
-        public UpdateSiteConfigWebRequestHandler(IFileCacheService fileCacheService,                                                
+        public PostOrPutSiteConfigWebRequestHandler(IFileCacheService fileCacheService,                                                
                                                 IMimeTypeDatabase mimeTypeDatabase,
+                                                string name,
                                                 ServerData serverData,
                                                 ISiteConfigService siteConfigService) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
+            _name = name;
             _siteConfigService = siteConfigService;
         }
 
-        public string Name => WebRequestHandlerNames.UpdateSiteConfig;
+        public string Name => _name;
 
         //public bool CanHandle(RequestContext requestContext)
         //{
@@ -49,17 +52,35 @@ namespace CFWebServer.WebRequestHandlers
             {
                 await request.InputStream.CopyToAsync(memoryStream);
 
+                var siteConfigs = _siteConfigService.GetAll();
+
                 // Get folder config DTOs from content
                 var json = Encoding.UTF8.GetString(memoryStream.ToArray());
                 var siteConfig = JsonUtilities.DeserializeFromString<SiteConfig>(json, JsonUtilities.DefaultJsonSerializerOptions);
 
+                // Check if site config with same name exists
+                var siteConfigWithSameName = siteConfigs.FirstOrDefault(sc => sc.Name == siteConfig.Name);                
+
                 if (String.IsNullOrEmpty(siteConfig.Id))   // New site
                 {
+                    if (siteConfigWithSameName != null)     // Site exists
+                    {                         
+                        response.StatusCode = (int)HttpStatusCode.BadRequest;
+                        response.StatusDescription = "Site name must be unique";                                                  
+                    }
+                
                     siteConfig.Id = Guid.NewGuid().ToString();
-                    _siteConfigService.Add(siteConfig);   // TODO: Need Add method
+                    _siteConfigService.Add(siteConfig);
                 }
                 else    // Update site
                 {
+                    if (siteConfigWithSameName != null &&
+                        siteConfigWithSameName.Id != siteConfig.Id)  // Updating site config with same name as other site
+                    {
+                        response.StatusCode = (int)HttpStatusCode.BadRequest;
+                        response.StatusDescription = "Site name must be unique";
+                    }                    
+
                     _siteConfigService.Update(siteConfig);
                 }
 

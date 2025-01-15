@@ -2,7 +2,7 @@
   "profiles": {
     "CFWebServer": {
       "commandName": "Project",
-      "commandLineArgs": "/site=\"http://localhost:10010/\" /root=\"D:\\Data\\Dev\\C#\\cf-web-server\\CFWebServer\\bin\\Debug\\net8.0\\Root\" /default-file=\"Index.html\" /file-cache-expiry-mins=30 /max-concurrent-requests=15"
+      "commandLineArgs": "/site-config-id=\"49cfe41d-0526-45c6-97eb-4afbd42144bf\" /site-internal-site=\"http://localhost:10011/\""
     }
   }
 }

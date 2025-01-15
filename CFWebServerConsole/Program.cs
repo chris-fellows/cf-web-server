@@ -16,10 +16,15 @@ using CFWebServer.Services;
 
 //new MimeDatabaseCreator().Create("D:\\Data\\Dev\\MIME types\\MIME Types.txt", "D:\\Data\\Dev\\MIME types\\MimeDatabase.cs");
 
+/* Command line to start 
+/ site = "http://localhost:10010/" / root = "D:\Data\Dev\C#\cf-web-server\CFWebServer\bin\Debug\net8.0\Root" / default - file = "Index.html" / file - cache - expiry - mins = 30 / max - concurrent - requests = 15
+*/
+
 // Create log writer
 var logWriter = new DefaultLogWriter();
 logWriter.Log("Starting CF Web Server");
 
+// Set authorization managers
 var authorizationManagers = new List<IAuthorizationManager>()
 {
     new ApiKeyAuthorizationManager(),
@@ -41,8 +46,11 @@ var siteConfig = new SiteConfig()
         Expiry = TimeSpan.FromSeconds(900),
         MaxFileSizeBytes = 1024 * 1000,
         MaxTotalSizeBytes = 1024 * 10000
-    }
+    },
+    RouteRules = new List<RouteRule>()
 };
+
+//siteConfig.Id = "49cfe41d-0526-45c6-97eb-4afbd42144bf";
 
 // Set MIME type database
 var mimeTypeDatabase = new StaticMimeTypeInfoDatabase();
@@ -53,6 +61,28 @@ var configFolder = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly
 // Set services for config data
 //var folderConfigService = new XmlFolderConfigService(Path.Combine(configFolder, "FolderConfig"));
 var siteConfigService = new XmlSiteConfigService(Path.Combine(configFolder, "SiteConfig"));
+
+//var siteConfigNew = new SiteConfig()
+//{
+//    Id = Guid.NewGuid().ToString(),
+//    DefaultFile = "Index.html",
+//    MaxConcurrentRequests = 10,
+//    AuthorizationRules = new List<AuthorizationRule>(),
+//    CacheFileConfig = new FileCacheConfig()
+//    {
+//        Compressed = false,
+//        Expiry = TimeSpan.FromMinutes(10),
+//        MaxFileSizeBytes = 1024 * 1000,
+//        MaxTotalSizeBytes = 1024 * 10000
+//    },
+//    Enabled = true,
+//    FolderConfigs = new List<FolderConfig>(),
+//    Name = "Test 1",
+//    RootFolder = "D:\\Test\\CFWebServer\\Root\\Site1",
+//    RouteRules = new List<RouteRule>(),
+//    Site = "http://localhost:10010"
+//};
+//siteConfigService.Add(siteConfigNew);
 
 // Process command line arguments. Use defaults if necessary
 TimeSpan logStatisticsInterval = TimeSpan.FromSeconds(300);
@@ -107,11 +137,11 @@ foreach (var arg in Environment.GetCommandLineArgs())
         root = root.Replace("{process-path}", Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
         siteConfig.RootFolder = root;
     }
-    else if (arg.StartsWith("/site"))
+    else if (arg.StartsWith("/site="))
     {
         siteConfig.Site = arg.Split('=')[1].Trim();
     }
-    else if (arg.StartsWith("/site-config-id"))     // Existing site config
+    else if (arg.StartsWith("/site-config-id="))     // Existing site config
     {
         siteConfig.Id= arg.Split('=')[1].Trim();
 
@@ -145,6 +175,9 @@ var webServers = new List<IWebServer>();   // Web server, internal web server
 // ------------------------------------------------------------------------------------------------------------------------
 // Create internal web server
 
+// TODO: Pick up API key from config
+var internalAPIKey = "111111";
+
 // Set site config. Only really use the Site property
 var siteConfigInternal = new SiteConfig()
 {    
@@ -153,7 +186,73 @@ var siteConfigInternal = new SiteConfig()
     FolderConfigs =new List<FolderConfig>(),
     Enabled = true,    
     MaxConcurrentRequests = 10,
-    Site = internalSite
+    Site = internalSite,
+    AuthorizationRules = new List<AuthorizationRule>()
+    {
+           new AuthorizationRule()
+            {
+                Id = "API_KEY_RULE",
+                HeaderName = "Authorization",
+                Scheme = "Apikey",       // Apikey [key], Bearer [JWT]
+                APIKey = internalAPIKey
+            }
+    },
+    RouteRules = new List<RouteRule>()
+    {
+        // Site config handlers
+        new RouteRule()
+        {
+            WebRequestHandlerName = WebRequestHandlerNames.PostSiteConfig,
+            Methods = new List<string>() { "POST" },
+            RelativePathPatterns = new List<string>()
+            {
+                "/siteConfig"
+            },
+            AuthorizationRuleIds = new List<string>()
+            {
+                "API_KEY_RULE"
+            }
+        },
+        new RouteRule()
+        {
+            WebRequestHandlerName = WebRequestHandlerNames.PutSiteConfig,
+            Methods = new List<string>() { "PUT" },
+            RelativePathPatterns = new List<string>()
+            {
+                "/siteConfig"
+            },
+            AuthorizationRuleIds = new List<string>()
+            {
+                "API_KEY_RULE"
+            }
+        },
+        new RouteRule()
+        {
+            WebRequestHandlerName = WebRequestHandlerNames.GetSiteConfigs,
+            Methods = new List<string>() { "GET" },
+            RelativePathPatterns = new List<string>()
+            {
+                "/siteConfig"
+            },
+            AuthorizationRuleIds = new List<string>()
+            {
+                "API_KEY_RULE"
+            }
+        },
+        new RouteRule()
+        {
+            WebRequestHandlerName = WebRequestHandlerNames.GetSiteConfig,
+            Methods = new List<string>() { "GET" },
+            RelativePathPatterns = new List<string>()
+            {
+                "/siteConfig/*"
+            },
+            AuthorizationRuleIds = new List<string>()
+            {
+                "API_KEY_RULE"
+            }
+        }
+    }
 };
 
 // Set cache service.
@@ -165,53 +264,8 @@ var fileCacheServiceInternal = new LocalMemoryFileCache(cacheServiceInternal, si
 // Set server data
 var serverDataInternal = new ServerData(TimeSpan.Zero, siteConfigInternal);
 
-// TODO: Pick up API key from config
-var internalAPIKey = "111111";
-
-// Set route rules
-var routeRulesInternal = new List<RouteRule>()
-{
-     // Site config handlers
-    new RouteRule()
-    {
-        WebRequestHandlerName = WebRequestHandlerNames.UpdateSiteConfig,
-        Methods = new List<string>() { "POST" },
-        RelativePaths = new List<string>()
-        {
-            "/siteConfig"
-        },
-        AuthorizationRules = new List<AuthorizationRule>()
-        {
-            new AuthorizationRule()
-            {
-                HeaderName = "Authorization",
-                Scheme = "Apikey",       // Apikey [key], Bearer [JWT]
-                Value = internalAPIKey
-            }
-        }
-    },
-    new RouteRule()
-    {
-        WebRequestHandlerName = WebRequestHandlerNames.GetSiteConfigs,
-        Methods = new List<string>() { "GET" },
-        RelativePaths = new List<string>()
-        {
-            "/siteConfig"
-        },
-        AuthorizationRules = new List<AuthorizationRule>()
-        {
-            new AuthorizationRule()
-            {                
-                HeaderName = "Authorization",
-                Scheme = "Apikey",      // Apikey [key], Bearer [JWT]
-                Value = internalAPIKey
-            }
-        }
-    }
-};
-
 IWebRequestHandlerFactory webRequestHandlerFactoryInternal = new WebRequestHandlerFactory(authorizationManagers, fileCacheServiceInternal, 
-                                                            mimeTypeDatabase, routeRulesInternal, siteConfigService);
+                                                            mimeTypeDatabase, siteConfigService);
 
 // Initialise web server for internal
 var webServerInternal = new WebServer(cacheServiceInternal,
@@ -230,6 +284,35 @@ webServers.Add(webServerInternal);
 // Create each web site
 foreach (var currentSiteConfig in siteConfigsToStart)
 {
+    // Set default route rules if not set
+    if (!currentSiteConfig.RouteRules.Any())
+    {
+        currentSiteConfig.RouteRules = new List<RouteRule>()
+        {
+            // Static content handlers
+            new RouteRule()
+            {
+                WebRequestHandlerName = WebRequestHandlerNames.StaticResourceDelete,
+                Methods = new List<string>() { "DELETE" }                
+            },
+            new RouteRule()
+            {
+                WebRequestHandlerName = WebRequestHandlerNames.StaticResourceGet,
+                Methods = new List<string>() { "GET" }
+            },
+            new RouteRule()
+            {
+                WebRequestHandlerName = WebRequestHandlerNames.StaticResourcePost,
+                Methods = new List<string>() { "POST" }
+            },
+            new RouteRule()
+            {
+                WebRequestHandlerName = WebRequestHandlerNames.StaticResourcePut,
+                Methods = new List<string>() { "PUT" }
+            }
+        };
+    }
+
     // Set cache service.
     var cacheService = new LocalMemoryCache();
 
@@ -237,37 +320,11 @@ foreach (var currentSiteConfig in siteConfigsToStart)
     var fileCacheService = new LocalMemoryFileCache(cacheService, currentSiteConfig.CacheFileConfig);
 
     // Set server data
-    var serverData = new ServerData(logStatisticsInterval, currentSiteConfig);
-
-    // Set route rules
-    var routeRules = new List<RouteRule>()
-    {
-        // Static content handlers
-        new RouteRule()
-        {
-            WebRequestHandlerName = WebRequestHandlerNames.StaticResourceDelete,
-            Methods = new List<string>() { "DELETE" }
-        },
-        new RouteRule()
-        {
-            WebRequestHandlerName = WebRequestHandlerNames.StaticResourceGet,
-            Methods = new List<string>() { "GET" }
-        },
-        new RouteRule()
-        {
-            WebRequestHandlerName = WebRequestHandlerNames.StaticResourcePost,
-            Methods = new List<string>() { "POST" }
-        },
-        new RouteRule()
-        {
-            WebRequestHandlerName = WebRequestHandlerNames.StaticResourcePut,
-            Methods = new List<string>() { "PUT" }
-        }
-    };
+    var serverData = new ServerData(logStatisticsInterval, currentSiteConfig);  
 
     // Set web request handler factory
     IWebRequestHandlerFactory webRequestHandlerFactory = new WebRequestHandlerFactory(authorizationManagers, fileCacheService, 
-                                                                    mimeTypeDatabase, routeRules, siteConfigService);
+                                                                    mimeTypeDatabase, siteConfigService);
 
     // Initialise web server
     var webServer = new WebServer(cacheService,

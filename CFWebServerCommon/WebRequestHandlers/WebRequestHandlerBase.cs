@@ -19,7 +19,7 @@ namespace CFWebServer.WebRequestHandlers
             _fileCacheService = fileCacheService;
             _mimeTypeDatabase = mimeTypeDatabase;
             _serverData = serverData;
-        } 
+        }
         
         /// <summary>
         /// Whether cache file is not latest

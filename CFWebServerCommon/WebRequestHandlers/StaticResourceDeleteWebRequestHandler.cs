@@ -52,7 +52,7 @@ namespace CFWebServer.WebRequestHandlers
                 response.Close();
 
                 // Remove cache file if exists
-                var cacheFile = _fileCacheService.Get(relativePath);
+                var cacheFile =  _fileCacheService.Enabled ? _fileCacheService.Get(relativePath) : null;
                 if (cacheFile != null)
                 {
                     _fileCacheService.Remove(relativePath);

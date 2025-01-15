@@ -24,7 +24,7 @@
         /// <summary>
         /// Cache expiry (0=Cache disabled)
         /// </summary>
-        public TimeSpan Expiry { get; set; }
+        public TimeSpan Expiry { get; set; }        
 
         public object Clone()
         {

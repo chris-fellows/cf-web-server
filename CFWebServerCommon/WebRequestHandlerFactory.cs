@@ -1,6 +1,7 @@
 ﻿using CFWebServer.Constants;
 using CFWebServer.Interfaces;
 using CFWebServer.Models;
+using CFWebServer.Utilities;
 using CFWebServer.WebRequestHandlers;
 using System.Net;
 
@@ -13,20 +14,17 @@ namespace CFWebServer
     {
         private readonly List<IAuthorizationManager> _authorizationManagers;
         private readonly IFileCacheService _fileCacheService;
-        private readonly IMimeTypeDatabase _mimeTypeDatabase;
-        private readonly List<RouteRule> _routeRules;
+        private readonly IMimeTypeDatabase _mimeTypeDatabase;        
         private readonly ISiteConfigService _siteConfigService;
 
         public WebRequestHandlerFactory(IEnumerable<IAuthorizationManager> authorizationManagers,
                                         IFileCacheService fileCacheService,                                        
-                                        IMimeTypeDatabase mimeTypeDatabase,
-                                        List<RouteRule> routeRules,
+                                        IMimeTypeDatabase mimeTypeDatabase,                                        
                                         ISiteConfigService siteConfigService)
         {
             _authorizationManagers = authorizationManagers.ToList();
             _fileCacheService = fileCacheService;
-            _mimeTypeDatabase = mimeTypeDatabase;
-            _routeRules = routeRules;
+            _mimeTypeDatabase = mimeTypeDatabase;            
             _siteConfigService = siteConfigService;
         }     
 
@@ -42,8 +40,10 @@ namespace CFWebServer
                 new StaticResourcePutWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData),
 
                 // Site config
+                new GetSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData, _siteConfigService),
                 new GetSiteConfigsWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData, _siteConfigService),
-                new UpdateSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData, _siteConfigService),
+                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PostSiteConfig, serverData, _siteConfigService),
+                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PutSiteConfig, serverData, _siteConfigService),
 
                 // Specific status code
                 new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeNotFound, HttpStatusCode.NotFound, _mimeTypeDatabase,  serverData),
@@ -58,16 +58,21 @@ namespace CFWebServer
         /// </summary>
         /// <param name="requestContext"></param>
         /// <param name="routeRule"></param>
+        /// <param name="allAuthorizationRules"></param>
         /// <returns></returns>
-        private bool IsAuthorized(RequestContext requestContext, RouteRule routeRule)
+        private bool IsAuthorized(RequestContext requestContext, RouteRule routeRule, List<AuthorizationRule> siteConfigAuthorizationRules)
         {
-            if (routeRule.AuthorizationRules == null || !routeRule.AuthorizationRules.Any())
+            if (routeRule.AuthorizationRuleIds == null || !routeRule.AuthorizationRuleIds.Any())
             {
                 return true;
             }
 
-            foreach(var authorizationRule in routeRule.AuthorizationRules)
+            foreach(var authorizationRuleId in routeRule.AuthorizationRuleIds)
             {
+                // Get authorization rule
+                var authorizationRule = siteConfigAuthorizationRules.First(ar => ar.Id == authorizationRuleId);
+
+                // Check authorization rule
                 var authorizationManager = _authorizationManagers.First(am => am.Scheme == authorizationRule.Scheme);
                 if (authorizationManager.IsAuthorized(requestContext, authorizationRule))
                 {
@@ -77,6 +82,32 @@ namespace CFWebServer
 
             return false;            
         }
+
+        /// <summary>
+        /// Gets the route rule for the request
+        /// </summary>
+        /// <param name="requestContext"></param>
+        /// <param name="serverData"></param>
+        /// <returns></returns>
+        private RouteRule? GetRouteRule(RequestContext requestContext, ServerData serverData)
+        {
+            var relativePath = requestContext.Request.Url.AbsolutePath;
+
+            var request = requestContext.Request;
+
+            // Filter route rules by method
+            var routeRules = serverData.SiteConfig.RouteRules.Where(rr => rr.Methods == null ||
+                                                !rr.Methods.Any() ||
+                                                (rr.Methods.Any() && rr.Methods.Contains(request.HttpMethod))).ToList();
+
+            // Filter route rules by relative path
+            routeRules = routeRules.Where(rr => rr.RelativePathPatterns == null ||
+                                                !rr.RelativePathPatterns.Any() ||
+                                                (rr.RelativePathPatterns.Any() && rr.RelativePathPatterns.Any(rp => HttpUtilities.IsRelativeUrlMatchesPattern(relativePath, rp, '*')))).ToList();
+
+            // Return first rule                        
+            return routeRules.FirstOrDefault();
+        }
        
         public IWebRequestHandler? Get(RequestContext requestContext, ServerData serverData)
         {
@@ -84,18 +115,8 @@ namespace CFWebServer
 
             var request = requestContext.Request;
 
-            // Filter route rules by method
-            var routeRules = _routeRules.Where(rr => rr.Methods == null ||
-                                                !rr.Methods.Any() ||
-                                                (rr.Methods.Any() && rr.Methods.Contains(request.HttpMethod))).ToList();
-
-            // Filter route rules by relative path
-            routeRules = routeRules.Where(rr => rr.RelativePaths == null ||
-                                                !rr.RelativePaths.Any() ||
-                                                (rr.RelativePaths.Any() && rr.RelativePaths.Contains(relativePath))).ToList();
-
-            // Select first rule            
-            var routeRule = routeRules.FirstOrDefault();            
+            // Get route rule
+            var routeRule = GetRouteRule(requestContext, serverData);
 
             // Get all web request handlers
             var allWebRequestHandlers = GetAll(serverData);
@@ -105,7 +126,7 @@ namespace CFWebServer
             if (routeRule != null)
             {
                 // Check authorization valid (E.g. API key set)
-                if (!IsAuthorized(requestContext, routeRule))
+                if (!IsAuthorized(requestContext, routeRule, serverData.SiteConfig.AuthorizationRules))
                 {
                     return allWebRequestHandlers.FirstOrDefault(h => h.Name == WebRequestHandlerNames.StatusCodeUnauthorized);                    
                 }

@@ -11,13 +11,13 @@ namespace CFWebServer.AuthorizationManagers
         public string Scheme => "Apikey";
         
         public bool IsAuthorized(RequestContext requestContext, AuthorizationRule authorizationRule)
-        {
+        {        
             // Check for any valid authorization rule
             var request = requestContext.Request;
 
             var headerValue = request.Headers[authorizationRule.HeaderName];
 
-            return headerValue == $"{Scheme} {(string)authorizationRule.Value}";
+            return headerValue == $"{Scheme} {(string)authorizationRule.APIKey}";
         }
     }
 }

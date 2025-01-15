@@ -25,7 +25,7 @@ namespace CFWebServerMobile.ViewModels
         private readonly ICacheService _cacheService;
         private readonly IFileCacheService _fileCacheService;        
         private readonly ILogWriter _logWriter;
-        private readonly IServerEventQueue _serverEventQueue,
+        private readonly IServerEventQueue _serverEventQueue;
         private readonly ISiteConfigService _siteConfigService;
         private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
 

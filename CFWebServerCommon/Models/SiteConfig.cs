@@ -50,6 +50,16 @@
         /// </summary>
         public List<FolderConfig> FolderConfigs = new List<FolderConfig>();
 
+        /// <summary>
+        /// Authorization rules
+        /// </summary>
+        public List<AuthorizationRule> AuthorizationRules = new List<AuthorizationRule>();
+
+        /// <summary>
+        /// Route rules
+        /// </summary>
+        public List<RouteRule> RouteRules = new List<RouteRule>();
+
         public object Clone()
         {
             var siteConfig = new SiteConfig()
@@ -62,7 +72,9 @@
                 MaxConcurrentRequests = MaxConcurrentRequests,
                 Enabled = Enabled,
                 CacheFileConfig = (FileCacheConfig)CacheFileConfig.Clone(),
-                FolderConfigs = FolderConfigs.Select(fc => (FolderConfig)fc.Clone()).ToList()
+                FolderConfigs = FolderConfigs.Select(fc => (FolderConfig)fc.Clone()).ToList(),
+                AuthorizationRules = AuthorizationRules.Select(fc => (AuthorizationRule)fc.Clone()).ToList(),
+                RouteRules = RouteRules.Select(fc => (RouteRule)fc.Clone()).ToList()
             };
             return siteConfig;
         }

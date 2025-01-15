@@ -1,13 +1,10 @@
 ﻿using CFWebServer.Models;
-using CFWebServerCommon.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CFWebServer.Interfaces
 {
+    /// <summary>
+    /// Authorization manager. E.g. API key, bearer token etc
+    /// </summary>
     public interface IAuthorizationManager
     {
         /// <summary>

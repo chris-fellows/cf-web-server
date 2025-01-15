@@ -20,19 +20,9 @@ namespace CFWebServer.WebRequestHandlers
         }
 
         public string Name => WebRequestHandlerNames.StaticResourcePost;
-
-        //public bool CanHandle(RequestContext requestContext)
-        //{
-        //    return requestContext.Request.HttpMethod == "POST";
-        //}
-
+        
         public async Task HandleAsync(RequestContext requestContext)
-        {
-            //if (!CanHandle(requestContext))
-            //{
-            //    throw new ArgumentException("Unable to handle request");
-            //}
-
+        {          
             var relativePath = requestContext.Request.Url.AbsolutePath;
 
             // Getlocal path
@@ -54,7 +44,7 @@ namespace CFWebServer.WebRequestHandlers
                 response.Close();
 
                 // Update cache file if exists
-                var cacheFile = _fileCacheService.Get(relativePath);
+                var cacheFile = _fileCacheService.Enabled ? _fileCacheService.Get(relativePath) : null;
                 if (cacheFile != null)
                 {
                     _fileCacheService.Add(relativePath, new byte[0], new FileInfo(localResourcePath).LastWriteTimeUtc);

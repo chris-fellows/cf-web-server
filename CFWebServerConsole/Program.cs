@@ -309,6 +309,15 @@ foreach (var currentSiteConfig in siteConfigsToStart)
             {
                 WebRequestHandlerName = WebRequestHandlerNames.StaticResourcePut,
                 Methods = new List<string>() { "PUT" }
+            },
+            new RouteRule()
+            {
+                WebRequestHandlerName = WebRequestHandlerNames.PowerShell,
+                Methods = new List<string>(),
+                RelativePathPatterns = new List<string>()
+                {
+                    "#extension#:.ps1"
+                }
             }
         };
     }

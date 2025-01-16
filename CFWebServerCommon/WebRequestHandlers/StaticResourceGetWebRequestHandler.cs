@@ -41,7 +41,7 @@ namespace CFWebServer.WebRequestHandlers
                 }
 
                 // Get mime type info
-                var mimeTypeInfo = _mimeTypeDatabase.GetByFileExtension(HttpUtilities.GetUrlFileExtension(relativePath)).FirstOrDefault();
+                var mimeTypeInfo = _mimeTypeDatabase.GetByFileExtension(HttpUtilities.GetResourceExtension(relativePath)).FirstOrDefault();
 
                 if (cacheFile == null)    // File not cached
                 {

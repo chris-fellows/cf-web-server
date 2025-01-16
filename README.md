@@ -1,6 +1,6 @@
 # cf-web-server
 
-Basic web server. Currently only serves static resources.
+Basic web server. It serves static content and also dynamic content via PowerScript scripts.
 
 The web server runs an internal website that is used for configuring websites. It can be managed via the
 scripts in the Scripts folder.
@@ -58,3 +58,8 @@ Example to run a website for an existing site config:
 
 # Internal Web Site
 An internal web site is hosted so that sites can be configured via HTTP.
+
+# PowerShell Web Request Handler
+The web server can handle dynamic content via PowerShell scripts.
+
+See example in \Scripts\PowerShell Web Request Handler Sample

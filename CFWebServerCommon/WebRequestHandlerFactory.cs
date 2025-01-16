@@ -45,6 +45,9 @@ namespace CFWebServer
                 new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PostSiteConfig, serverData, _siteConfigService),
                 new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PutSiteConfig, serverData, _siteConfigService),
 
+                // PowerShell resources (.ps1)
+                new PowerShellWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData),
+
                 // Specific status code
                 new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeNotFound, HttpStatusCode.NotFound, _mimeTypeDatabase,  serverData),
                 new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeUnauthorized, HttpStatusCode.Unauthorized, _mimeTypeDatabase,  serverData)
@@ -93,20 +96,26 @@ namespace CFWebServer
         {
             var relativePath = requestContext.Request.Url.AbsolutePath;
 
+            var urlFileExtension = HttpUtilities.GetResourceExtension(relativePath);
+
             var request = requestContext.Request;
 
             // Filter route rules by method
             var routeRules = serverData.SiteConfig.RouteRules.Where(rr => rr.Methods == null ||
                                                 !rr.Methods.Any() ||
-                                                (rr.Methods.Any() && rr.Methods.Contains(request.HttpMethod))).ToList();
+                                                (rr.Methods.Any() && rr.Methods.Contains(request.HttpMethod))).ToList();            
 
-            // Filter route rules by relative path
+            // Filter route rules by relative path:
+            // - No specific path rule.
+            // - Specific file extension for resource.
+            // - URL pattern.
             routeRules = routeRules.Where(rr => rr.RelativePathPatterns == null ||
                                                 !rr.RelativePathPatterns.Any() ||
+                                                (rr.RelativePathPatterns.Any(rr => rr.Equals($"#extension#:{urlFileExtension}"))) ||
                                                 (rr.RelativePathPatterns.Any() && rr.RelativePathPatterns.Any(rp => HttpUtilities.IsRelativeUrlMatchesPattern(relativePath, rp, '*')))).ToList();
 
             // Return first rule                        
-            return routeRules.FirstOrDefault();
+            return routeRules.LastOrDefault();
         }
        
         public IWebRequestHandler? Get(RequestContext requestContext, ServerData serverData)

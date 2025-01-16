@@ -20,6 +20,8 @@ namespace CFWebServer.Constants
         public const string PutSiteConfig = "PUT_SITE_CONFIG";
         public const string TestCustomGet = "TEST_CUSTOM_GET";
 
+        public const string PowerShell = "POWERSHELL";
+
         // General
         public const string StatusCodeNotFound = "NOT_FOUND";
         public const string StatusCodeUnauthorized = "UNAUTHORIZED";

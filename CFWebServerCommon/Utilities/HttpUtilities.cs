@@ -57,10 +57,11 @@ namespace CFWebServer.Utilities
             return newUrl.ToString();           
         }
 
-        public static string GetUrlFileExtension(string url)
+        public static string GetResourceExtension(string url)
         {
             var elements = url.Split('/');
-            return elements.Last().Split('.').Last();
+            var extension = elements.Last().Split('.').Last();
+            return String.IsNullOrEmpty(extension) ? "" : $".{extension}";
         }
 
         /// <summary>

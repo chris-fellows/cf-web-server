@@ -7,29 +7,29 @@ namespace CFWebServer.WebServerComponents
     /// <summary>
     /// Listens for requests. Adds to queue
     /// </summary>
-    internal class ListenerComponent : IWebServerComponent
+    internal class ListenerComponent : ISiteComponent
     {
         private Thread? _thread;
         
         private HttpListener? _listener;
         private ISiteLogWriter _logWriter;
 
-        private readonly ServerData _serverData;
+        private readonly SiteData _siteData;
         
         private CancellationToken _cancellationToken;
 
         public ListenerComponent(ISiteLogWriter logWriter,
-                            ServerData serverData,                            
+                            SiteData siteData,                            
                             CancellationToken cancellationToken)
         {            
             _logWriter = logWriter;
-            _serverData = serverData;            
+            _siteData = siteData;            
             _cancellationToken = cancellationToken;
         }
 
         public void Start()
         {            
-            _logWriter.Log($"Starting listening for requests at {_serverData.SiteConfig.Site}");
+            _logWriter.Log($"Starting listening for requests at {_siteData.SiteConfig.Site}");
 
             if (!HttpListener.IsSupported)
             {
@@ -37,7 +37,7 @@ namespace CFWebServer.WebServerComponents
             }
 
             _listener = new HttpListener();
-            _listener.Prefixes.Add(_serverData.SiteConfig.Site);
+            _listener.Prefixes.Add(_siteData.SiteConfig.Site);
             _listener.Start();
 
             _thread = new Thread(WorkerThread);
@@ -72,11 +72,11 @@ namespace CFWebServer.WebServerComponents
 
                     // Add request to queue
                     RequestContext requestContext = new RequestContext(listenerContext.Request, listenerContext.Response);
-                    _serverData.Mutex.WaitOne();
-                    _serverData.RequestContextQueue.Enqueue(requestContext);
-                    _serverData.Statistics.CountRequestsReceived++;
-                    _serverData.Statistics.LastRequestReceivedTime = DateTimeOffset.UtcNow;
-                    _serverData.Mutex.ReleaseMutex();
+                    _siteData.Mutex.WaitOne();
+                    _siteData.RequestContextQueue.Enqueue(requestContext);                    
+                    _siteData.Statistics.CountRequestsReceived = (_siteData.Statistics.CountRequestsReceived % int.MaxValue) + 1;
+                    _siteData.Statistics.LastRequestReceivedTime = DateTimeOffset.UtcNow;
+                    _siteData.Mutex.ReleaseMutex();
                 }
                 catch (HttpListenerException)
                 {

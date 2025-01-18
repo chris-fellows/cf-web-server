@@ -1,9 +1,9 @@
 ﻿namespace CFWebServer.Interfaces
 {
     /// <summary>
-    /// Web server component
+    /// Site component
     /// </summary>
-    public interface IWebServerComponent
+    public interface ISiteComponent
     {
         /// <summary>
         /// Start component

@@ -1,24 +1,22 @@
-﻿using CFWebServer.Models;
-
-namespace CFWebServer.Interfaces
+﻿namespace CFWebServer.Interfaces
 {
     /// <summary>
-    /// Interface to web server
+    /// Interface to web site
     /// </summary>
-    public interface IWebServer
+    public interface ISite
     {
         /// <summary>
-        /// Starts web server to handle requests
+        /// Starts site to handle requests
         /// </summary>
         void Start();
 
         /// <summary>
-        /// Stops web server
+        /// Stops site
         /// </summary>
         void Stop();       
 
         /// <summary>
-        /// Whether web server has started
+        /// Whether site has started
         /// </summary>
         bool IsStarted { get; }
     }

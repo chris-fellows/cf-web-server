@@ -15,17 +15,17 @@ namespace CFWebServer.Interfaces
         void Notify(ServerEvent serverEvent);
 
         /// <summary>
-        /// Subscribes to receive events
+        /// Subscribe to receive event notifications
         /// </summary>
         /// <param name="serverEventTypes"></param>
         /// <param name="action"></param>
-        /// <returns></returns>
+        /// <returns>Subscribe Id (Passed to Unsubscribe later)</returns>
         string Subscribe(ServerEventTypes serverEventType, Action<ServerEvent> action);
 
         /// <summary>
         /// Unsubscribes from receiving events
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">Id returned by Subscribe call</param>
         void Unsubscribe(string id);
     }
 }

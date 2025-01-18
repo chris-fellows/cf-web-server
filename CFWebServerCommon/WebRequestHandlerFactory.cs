@@ -28,29 +28,29 @@ namespace CFWebServer
             _siteConfigService = siteConfigService;
         }     
 
-        private List<IWebRequestHandler> GetAll(ServerData serverData)
+        private List<IWebRequestHandler> GetAll(SiteData siteData)
         {
             // TODO: Use DI or reflection            
             var list = new List<IWebRequestHandler>()
             {
                 // Static resources
-                new StaticResourceDeleteWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData),
-                new StaticResourceGetWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData),
-                new StaticResourcePostWebRequestHandler(_fileCacheService,_mimeTypeDatabase, serverData),
-                new StaticResourcePutWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData),
+                new StaticResourceDeleteWebRequestHandler(_fileCacheService, _mimeTypeDatabase, siteData),
+                new StaticResourceGetWebRequestHandler(_fileCacheService, _mimeTypeDatabase, siteData),
+                new StaticResourcePostWebRequestHandler(_fileCacheService,_mimeTypeDatabase, siteData),
+                new StaticResourcePutWebRequestHandler(_fileCacheService, _mimeTypeDatabase, siteData),
 
                 // Site config
-                new GetSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData, _siteConfigService),
-                new GetSiteConfigsWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData, _siteConfigService),
-                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PostSiteConfig, serverData, _siteConfigService),
-                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PutSiteConfig, serverData, _siteConfigService),
+                new GetSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, siteData, _siteConfigService),
+                new GetSiteConfigsWebRequestHandler(_fileCacheService, _mimeTypeDatabase, siteData, _siteConfigService),
+                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PostSiteConfig, siteData, _siteConfigService),
+                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PutSiteConfig, siteData, _siteConfigService),
 
                 // PowerShell resources (.ps1)
-                new PowerShellWebRequestHandler(_fileCacheService, _mimeTypeDatabase, serverData),
+                new PowerShellWebRequestHandler(_fileCacheService, _mimeTypeDatabase, siteData),
 
                 // Specific status code
-                new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeNotFound, HttpStatusCode.NotFound, _mimeTypeDatabase,  serverData),
-                new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeUnauthorized, HttpStatusCode.Unauthorized, _mimeTypeDatabase,  serverData)
+                new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeNotFound, HttpStatusCode.NotFound, _mimeTypeDatabase,  siteData),
+                new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeUnauthorized, HttpStatusCode.Unauthorized, _mimeTypeDatabase,  siteData)
             };            
 
             return list;
@@ -90,7 +90,7 @@ namespace CFWebServer
         /// Gets the route rule for the request
         /// </summary>
         /// <param name="requestContext"></param>
-        /// <param name="serverData"></param>
+        /// <param name="siteConfig"></param>
         /// <returns></returns>
         private RouteRule? GetRouteRule(RequestContext requestContext, SiteConfig siteConfig)
         {
@@ -118,24 +118,24 @@ namespace CFWebServer
             return routeRules.OrderByDescending(rr => rr.Priority).LastOrDefault();
         }
        
-        public IWebRequestHandler? Get(RequestContext requestContext, ServerData serverData)
+        public IWebRequestHandler? Get(RequestContext requestContext, SiteData siteData)
         {
             var relativePath = requestContext.Request.Url.AbsolutePath;
 
             var request = requestContext.Request;
 
             // Get route rule
-            var routeRule = GetRouteRule(requestContext, serverData.SiteConfig);
+            var routeRule = GetRouteRule(requestContext, siteData.SiteConfig);
 
             // Get all web request handlers
-            var allWebRequestHandlers = GetAll(serverData);
+            var allWebRequestHandlers = GetAll(siteData);
 
             // Get web request handler for route rule
             IWebRequestHandler? webRequestHandler = null;           
             if (routeRule != null)
             {
                 // Check authorization valid (E.g. API key set)
-                if (!IsAuthorized(requestContext, routeRule, serverData.SiteConfig.AuthorizationRules))
+                if (!IsAuthorized(requestContext, routeRule, siteData.SiteConfig.AuthorizationRules))
                 {
                     return allWebRequestHandlers.FirstOrDefault(h => h.Name == WebRequestHandlerNames.StatusCodeUnauthorized);                    
                 }

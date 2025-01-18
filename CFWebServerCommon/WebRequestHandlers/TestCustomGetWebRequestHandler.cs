@@ -13,7 +13,7 @@ namespace CFWebServer.WebRequestHandlers
     {
         public TestCustomGetWebRequestHandler(IFileCacheService fileCacheService,
                                             IMimeTypeDatabase mimeTypeDatabase,
-                                            ServerData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
+                                            SiteData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
 
         }

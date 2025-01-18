@@ -13,8 +13,7 @@ This is a console app for running the web server.
 
 It can run in the following modes:
 1) Run single website that has a site config. Uses /site-config-id command line parameter.
-2) Run single website with no site config. Parameters are set on the command line.
-3) Run all websites with a site config. Default if none of the above is set.
+2) Run all enabled websites.
 
 # CFWebServerMobile (.NET Maui app)
 This is an .NET Maui app for running the web server. Currently it only run on Android.
@@ -23,35 +22,12 @@ This is an .NET Maui app for running the web server. Currently it only run on An
 This folder contains scripts for the following:
 1) Get site configs.
 2) Update site config.
+3) PowerShell web request handler sample.
 
 # Command Line
-Command line supports running only one website.
-
 Parameter					Description
-- /all-sites				Runs all websites with a site config
-- /default-file				Default file for / request. E.g. Index.html
-- /file-cache-compressed	Whether to store cache files as compressed. Default if not specified.
-- /file-cache-expiry-secs	Number of secs since cache file last used after which it is expired. If file is
-							frequently requested then it remains in cache and is removed N mins after it stops
-							being requested. Default if not specified.
-- /file-cache-disabled		File cache disabled. 
-- /max-cached-file-size		Max size of file (Bytes) that will be cached. Default if not specified.
-- /max-concurrent-requests	Max number of requests served concurrently. Default if not specified.
-- /max-file-cache-size		Max total size of file cache (Bytes). Default if not specified.
-- /root						Root folder where site is hosted.
-							If "{process-path}\TestSite" is specified then the it will replace {process-path}
-							with the path to the exe file.
-- /site						Site to host. E.g. http://localhost:10010						
-- /site-config-id			Use existing site config
-
-Example to run website with a site config:
-/site="http://localhost:10010"
-/root="{process-path}\Sites\Test1" 
-/default-file="Index.html"
-/file-cache-compressed=true 
-/file-cache-expiry-mins=30 
-/max-concurrent-requests=15
-/max-file-cache-size=10000024
+- /site-internal-site		Internal site for site config. E.g. http://localhost:10010/
+- /site-config-id			Use existing site config. If not specified then all enabled sites are started.
 
 Example to run a website for an existing site config:
 /site-config-id="123456"

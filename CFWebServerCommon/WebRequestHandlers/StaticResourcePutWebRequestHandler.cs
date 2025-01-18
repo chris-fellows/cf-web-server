@@ -14,7 +14,7 @@ namespace CFWebServer.WebRequestHandlers
     {        
         public StaticResourcePutWebRequestHandler(IFileCacheService fileCacheService,
                                                 IMimeTypeDatabase mimeTypeDatabase,
-                                                 ServerData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
+                                                 SiteData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
             
         }

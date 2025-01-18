@@ -7,14 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CFWebServerCommon
 {
-    public class WebServerFactory : IWebServerFactory
+    public class SiteFactory : ISiteFactory
     {        
         private readonly IMimeTypeDatabase _mimeTypeDatabase;
         private readonly IServerNotifications _serverNotifications;
         private readonly IServiceProvider _serviceProvider;
         private readonly ISiteConfigService _siteConfigService;
 
-        public WebServerFactory(IMimeTypeDatabase mimeTypeDatabase,
+        public SiteFactory(IMimeTypeDatabase mimeTypeDatabase,
                                 IServerNotifications serverNotifications,
                                 IServiceProvider serviceProvider,
                                 ISiteConfigService siteConfigService)
@@ -25,7 +25,7 @@ namespace CFWebServerCommon
             _siteConfigService = siteConfigService;
         }
 
-        public IWebServer CreateInternalWebServer(string apiKey, string site)
+        public ISite CreateInternalSite(string apiKey, string site)
         {
             using (var scope = _serviceProvider.CreateSiteConfigScope("Internal"))
             {              
@@ -113,28 +113,32 @@ namespace CFWebServerCommon
                 var fileCacheService = scope.ServiceProvider.GetRequiredService<IFileCacheService>();
 
                 // Set server data
-                var serverData = new ServerData() { SiteConfig = siteConfig };
+                var siteData = new SiteData() { SiteConfig = siteConfig };
 
                 var authorizationManagers = scope.ServiceProvider.GetServices<IAuthorizationManager>();
 
+                var webRequestHandlerFactory = scope.ServiceProvider.GetRequiredService<IWebRequestHandlerFactory>();
+
+                /*
                 IWebRequestHandlerFactory webRequestHandlerFactoryInternal = new WebRequestHandlerFactory(authorizationManagers,
                                                                             fileCacheService,
                                                                             _mimeTypeDatabase, _siteConfigService);
+                */
 
-                // Initialise web server for internal
-                var webServerInternal = new WebServer(cacheService,
+                // Initialise site
+                var website = new Site(cacheService,
                                                 fileCacheService,
-                                                logWriter,
-                                                serverData,
+                                                logWriter,                                                
                                                 _serverNotifications,
                                                 _siteConfigService,
-                                                webRequestHandlerFactoryInternal);
+                                                siteData,
+                                                webRequestHandlerFactory);
 
-                return webServerInternal;
+                return website;
             }
         }
 
-        public IWebServer CreateWebServerById(string siteConfigId)
+        public ISite CreateSiteById(string siteConfigId)
         {
             using (var scope = _serviceProvider.CreateSiteConfigScope(siteConfigId))
             {
@@ -197,24 +201,22 @@ namespace CFWebServerCommon
                 var fileCacheService = scope.ServiceProvider.GetRequiredService<IFileCacheService>();
 
                 // Set server data
-                var serverData = new ServerData() { SiteConfig = siteConfig };
+                var siteData = new SiteData() { SiteConfig = siteConfig };
 
                 var authorizationManagers = scope.ServiceProvider.GetServices<IAuthorizationManager>();
+                               
+                var webRequestHandlerFactory = scope.ServiceProvider.GetRequiredService<IWebRequestHandlerFactory>();
 
-                // Set web request handler factory
-                IWebRequestHandlerFactory webRequestHandlerFactory = new WebRequestHandlerFactory(authorizationManagers, fileCacheService,
-                                                                                _mimeTypeDatabase, _siteConfigService);
-
-                // Initialise web server
-                var webServer = new WebServer(cacheService,
+                // Initialise site
+                var website = new Site(cacheService,
                                                 fileCacheService,
-                                                logWriter,
-                                                serverData,
+                                                logWriter,                                                
                                                 _serverNotifications,                                                
-                                                _siteConfigService,                                                
+                                                _siteConfigService,
+                                                siteData,
                                                 webRequestHandlerFactory);
 
-                return webServer;
+                return website;
             }
         }
     }

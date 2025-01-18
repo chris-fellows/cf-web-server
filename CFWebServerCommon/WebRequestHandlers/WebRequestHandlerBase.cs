@@ -12,13 +12,13 @@ namespace CFWebServer.WebRequestHandlers
     {
         protected readonly IFileCacheService _fileCacheService;
         protected readonly IMimeTypeDatabase _mimeTypeDatabase;
-        protected readonly ServerData _serverData;
+        protected readonly SiteData _siteData;
 
-        public WebRequestHandlerBase(IFileCacheService fileCacheService, IMimeTypeDatabase mimeTypeDatabase, ServerData serverData)
+        public WebRequestHandlerBase(IFileCacheService fileCacheService, IMimeTypeDatabase mimeTypeDatabase, SiteData siteData)
         {
             _fileCacheService = fileCacheService;
             _mimeTypeDatabase = mimeTypeDatabase;
-            _serverData = serverData;
+            _siteData = siteData;
         }
         
         /// <summary>
@@ -28,7 +28,7 @@ namespace CFWebServer.WebRequestHandlers
         /// <returns></returns>
         protected bool IsCacheFileNotTheLatest(CacheFile cacheFile)
         {
-            var localResourcePath = HttpUtilities.GetResourceLocalPath(_serverData.SiteConfig.RootFolder, cacheFile.RelativePath);
+            var localResourcePath = HttpUtilities.GetResourceLocalPath(_siteData.SiteConfig.RootFolder, cacheFile.RelativePath);
 
             if (File.Exists(localResourcePath))
             {
@@ -48,10 +48,10 @@ namespace CFWebServer.WebRequestHandlers
         {
             if (relativePath == "/")
             {
-                relativePath = $"/{_serverData.SiteConfig.DefaultFile}";
+                relativePath = $"/{_siteData.SiteConfig.DefaultFile}";
             }
 
-            var localResourcePath = HttpUtilities.GetResourceLocalPath(_serverData.SiteConfig.RootFolder, relativePath);
+            var localResourcePath = HttpUtilities.GetResourceLocalPath(_siteData.SiteConfig.RootFolder, relativePath);
 
             return localResourcePath;
         }
@@ -64,7 +64,7 @@ namespace CFWebServer.WebRequestHandlers
         /// <returns></returns>
         protected bool IsActionAllowedForFolderPermission(string relativePath, FolderPermissions requiredFolderPermission)
         {
-            var folderConfig = _serverData.SiteConfig.FolderConfigs.FirstOrDefault(fc => fc.RelativePath == relativePath);
+            var folderConfig = _siteData.SiteConfig.FolderConfigs.FirstOrDefault(fc => fc.RelativePath == relativePath);
             if (folderConfig == null)
             {
                 var elements = relativePath.Split('/');

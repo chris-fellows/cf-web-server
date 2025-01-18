@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CFWebServer.Interfaces
+﻿namespace CFWebServer.Interfaces
 {
+    /// <summary>
+    /// Site context for dependency injection
+    /// </summary>
     public interface ISiteContext
     {
         string SiteConfigId { get; set; }

@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CFWebServer.Models
+﻿namespace CFWebServer.Models
 {
     /// <summary>
-    /// Web server statistics
+    /// Site statistics
     /// </summary>
-    public class ServerStatistics
+    public class SiteStatistics
     {
         /// <summary>
         /// Server start time

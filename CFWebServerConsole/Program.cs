@@ -15,7 +15,7 @@ namespace CFWebServerConsole
     /// - We start in one of the following modes:
     ///      a) All enabled websites with a config. If /sit-config-id command line param not set.
     ///      b) Website with a site config. Requires /site-config-id command line param.    
-    /// - Each WebServer instance serves one website. We pass in seperate dependencies for each because each site 
+    /// - Each Site instance serves one website. We pass in seperate dependencies for each because each site 
     ///   is independent.
     /// - We create an internal website which handles site config requests. E.g. Add site, update site permissions.
     /// - Logs are separate per website.
@@ -27,13 +27,15 @@ namespace CFWebServerConsole
             var serviceProvider = CreateServiceProvider();
                         
             Console.WriteLine("Starting CF Web Server");
+            
+            // Create sites to start
+            IWebServer webServer = new WebServer();
+            CreateSites(serviceProvider.GetRequiredService<ISiteConfigService>(),
+                                            serviceProvider.GetRequiredService<ISiteFactory>())
+                .ForEach(site => webServer.Add(site));
 
-            // Create web servers to start
-            var webServers = CreateWebServers(serviceProvider.GetRequiredService<ISiteConfigService>(),
-                                            serviceProvider.GetRequiredService<IWebServerFactory>());
-
-            // Start web servers
-            webServers.ForEach(webServer => webServer.Start());
+            // Start sites
+            webServer.Sites.ForEach(site => site.Start());
 
             // Wait for user to press escape
             do
@@ -48,20 +50,20 @@ namespace CFWebServerConsole
 
             Console.WriteLine("Terminating CF Web Server");
 
-            // Stop web servers
-            webServers.ForEach(webServer => webServer.Stop());
+            // Stop sites servers
+            webServer.Sites.ForEach(site => site.Stop());
 
             Console.WriteLine("Terminated CF Web Server");
         }
 
         /// <summary>
-        /// Gets web servers to start
+        /// Gets sites to start
         /// </summary>
         /// <param name="siteConfigService"></param>
-        /// <param name="webServerFactory"></param>
+        /// <param name="siteFactory"></param>
         /// <returns></returns>
-        private static List<IWebServer> CreateWebServers(ISiteConfigService siteConfigService,
-                                                                IWebServerFactory webServerFactory)
+        private static List<ISite> CreateSites(ISiteConfigService siteConfigService,
+                                               ISiteFactory siteFactory)
         {
             // Process command line args
             var internalSite = "";
@@ -83,18 +85,18 @@ namespace CFWebServerConsole
                 }
             }
 
-            var webServers = new List<IWebServer>();
+            var sites = new List<ISite>();
             
             // Create internal web server (Website management)
             if (!String.IsNullOrEmpty(internalSite))
             {
-                webServers.Add(webServerFactory.CreateInternalWebServer("111111", internalSite));
+                sites.Add(siteFactory.CreateInternalSite("111111", internalSite));
             }
 
             // Create web server(s), either specific site or all enabled sites
             if (!String.IsNullOrEmpty(siteCongfigId))     // Specific site
             {
-                webServers.Add(webServerFactory.CreateWebServerById(siteCongfigId));
+                sites.Add(siteFactory.CreateSiteById(siteCongfigId));
             }
             else    // All enabled sites
             {
@@ -102,11 +104,11 @@ namespace CFWebServerConsole
 
                 foreach (var siteConfig in siteConfigs)
                 {
-                    webServers.Add(webServerFactory.CreateWebServerById(siteConfig.Id));
+                    sites.Add(siteFactory.CreateSiteById(siteConfig.Id));
                 }
             }
 
-            return webServers;
+            return sites;
         }
 
         private static IServiceProvider CreateServiceProvider()
@@ -120,7 +122,7 @@ namespace CFWebServerConsole
             var serviceProvider = new ServiceCollection()                
                 .AddSingleton<IMimeTypeDatabase, StaticMimeTypeInfoDatabase>()
                 .AddSingleton<IServerNotifications, ServerNotifications>()
-                .AddSingleton<IWebServerFactory, WebServerFactory>()
+                .AddSingleton<ISiteFactory, SiteFactory>()
 
                 // Add site context so that we can create site scopes
                 .AddScoped<ISiteContext, SiteContext>()
@@ -139,7 +141,7 @@ namespace CFWebServerConsole
                 .AddScoped<IFileCacheService, LocalMemoryFileCache>()
 
                 .AddScoped<IWebRequestHandlerFactory, WebRequestHandlerFactory>()                
-                .AddScoped<IWebServer, WebServer>()
+                .AddScoped<ISite, Site>()
 
                 .AddScoped<ISiteConfigService>((scope) =>
                 {

@@ -12,6 +12,6 @@ namespace CFWebServer.Interfaces
         /// </summary>
         /// <param name="requestContext"></param>
         /// <returns></returns>
-        IWebRequestHandler? Get(RequestContext requestContext, ServerData serverData);
+        IWebRequestHandler? Get(RequestContext requestContext, SiteData siteData);
     }
 }

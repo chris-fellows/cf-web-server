@@ -8,35 +8,35 @@ namespace CFWebServer.WebServerComponents
     /// Processes requests and other periodic tasks (E.g. Expires cached files, logs statistics)
     /// </summary>
     /// <remarks>We could create a separate thread for periodic tasks but it is wasteful of resources.</remarks>
-    internal class RequestsComponent : IWebServerComponent
+    internal class RequestsComponent : ISiteComponent
     {
         private Thread? _thread;
 
         private readonly ICacheService _cacheService;
         private readonly IFileCacheService _fileCacheService;
         private readonly ISiteLogWriter _logWriter;
-        private readonly ServerData _serverData;        
+        private readonly SiteData _siteData;        
         private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
         private CancellationToken _cancellationToken;
 
         public RequestsComponent(ICacheService cacheService,
                             IFileCacheService fileCacheService,
                             ISiteLogWriter logWriter,
-                            ServerData serverData,                            
+                            SiteData siteData,                            
                             IWebRequestHandlerFactory webRequestHandlerFactory,
                             CancellationToken cancellationToken)
         {
             _cacheService = cacheService;
             _fileCacheService = fileCacheService;
             _logWriter = logWriter;
-            _serverData = serverData;            
+            _siteData = siteData;            
             _webRequestHandlerFactory = webRequestHandlerFactory;
             _cancellationToken = cancellationToken;          
         }
 
         public void Start()
         {
-            _logWriter.Log($"Starting waiting for requests to process at {_serverData.SiteConfig.Site}");
+            _logWriter.Log($"Starting waiting for requests to process at {_siteData.SiteConfig.Site}");
 
             _thread = new Thread(WorkerThread);
             _thread.Start();
@@ -69,17 +69,17 @@ namespace CFWebServer.WebServerComponents
             while (!_cancellationToken.IsCancellationRequested)
             {               
                 // Process next queued request if any
-                if (_serverData.ActiveRequestContexts.Count < _serverData.SiteConfig.MaxConcurrentRequests)
+                if (_siteData.ActiveRequestContexts.Count < _siteData.SiteConfig.MaxConcurrentRequests)
                 {
-                    if (_serverData.RequestContextQueue.Any())
+                    if (_siteData.RequestContextQueue.Any())
                     {
-                        var requestContext = _serverData.RequestContextQueue.Dequeue();
+                        var requestContext = _siteData.RequestContextQueue.Dequeue();
                         if (requestContext != null)
                         {
                             // Add to active requests
-                            _serverData.Mutex.WaitOne();
-                            _serverData.ActiveRequestContexts.Add(requestContext);
-                            _serverData.Mutex.ReleaseMutex();
+                            _siteData.Mutex.WaitOne();
+                            _siteData.ActiveRequestContexts.Add(requestContext);
+                            _siteData.Mutex.ReleaseMutex();
 
                             // Handle request
                             var task = HandleAsync(requestContext);
@@ -106,7 +106,7 @@ namespace CFWebServer.WebServerComponents
                     lastLogStatistics.Add(logStatisticsInterval) <= DateTimeOffset.UtcNow)
                 {
                     lastLogStatistics = DateTimeOffset.UtcNow;
-                    LogStatistics(_serverData.Statistics);
+                    LogStatistics(_siteData.Statistics);
                 }
 
                 Thread.Yield();
@@ -117,7 +117,7 @@ namespace CFWebServer.WebServerComponents
         /// Logs statistics
         /// </summary>
         /// <param name="serverStatistics"></param>
-        private void LogStatistics(ServerStatistics serverStatistics)
+        private void LogStatistics(SiteStatistics serverStatistics)
         {
             _logWriter.Log($"Statistics: Server started={serverStatistics.StartedTime.ToString()}, " +
                     $"Requests processed={serverStatistics.CountRequestsReceived}; " +
@@ -150,7 +150,7 @@ namespace CFWebServer.WebServerComponents
                 try
                 {
                     // Get request handler
-                    var webRequestHandler = _webRequestHandlerFactory.Get(requestContext, _serverData);
+                    var webRequestHandler = _webRequestHandlerFactory.Get(requestContext, _siteData);
 
                     // Handle request
                     if (webRequestHandler != null)
@@ -161,12 +161,12 @@ namespace CFWebServer.WebServerComponents
                 finally
                 {
                     // Remove request from active list
-                    _serverData.Mutex.WaitOne();
-                    if (_serverData.ActiveRequestContexts.Contains(requestContext))
+                    _siteData.Mutex.WaitOne();
+                    if (_siteData.ActiveRequestContexts.Contains(requestContext))
                     {
-                        _serverData.ActiveRequestContexts.Remove(requestContext);
+                        _siteData.ActiveRequestContexts.Remove(requestContext);
                     }
-                    _serverData.Mutex.ReleaseMutex();
+                    _siteData.Mutex.ReleaseMutex();
                 }
             });
 

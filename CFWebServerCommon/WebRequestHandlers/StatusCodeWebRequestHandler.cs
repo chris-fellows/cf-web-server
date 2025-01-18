@@ -17,7 +17,7 @@ namespace CFWebServer.WebRequestHandlers
                                         string name,
                                         HttpStatusCode statusCode,
                                         IMimeTypeDatabase mimeTypeDatabase,                                        
-                                        ServerData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
+                                        SiteData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
             _name = name;
             _statusCode = statusCode;

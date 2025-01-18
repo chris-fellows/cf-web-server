@@ -1,4 +1,5 @@
 ﻿using CFFileSystemConnection.Utilities;
+using CFWebServer.Enums;
 using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using System.Net;
@@ -12,15 +13,18 @@ namespace CFWebServer.WebRequestHandlers
     public class PostOrPutSiteConfigWebRequestHandler : WebRequestHandlerBase, IWebRequestHandler
     {
         private readonly string _name;
+        private readonly IServerNotifications _serverNotifications;
         private readonly ISiteConfigService _siteConfigService;
 
         public PostOrPutSiteConfigWebRequestHandler(IFileCacheService fileCacheService,                                                
                                                 IMimeTypeDatabase mimeTypeDatabase,
                                                 string name,
-                                                ServerData serverData,
+                                                IServerNotifications serverNotifications,
+                                                SiteData serverData,
                                                 ISiteConfigService siteConfigService) : base(fileCacheService, mimeTypeDatabase, serverData)
         {
             _name = name;
+            _serverNotifications = serverNotifications;
             _siteConfigService = siteConfigService;
         }
 
@@ -67,8 +71,18 @@ namespace CFWebServer.WebRequestHandlers
                         response.StatusDescription = "Site name must be unique";
                     }                    
 
-                    _siteConfigService.Update(siteConfig);
+                    _siteConfigService.Update(siteConfig);                    
                 }
+
+                // Notify site config updated
+                _serverNotifications.Notify(new ServerEvent()
+                {
+                    EventType= ServerEventTypes.SiteConfigUpdated,
+                    Parameters = new Dictionary<string, object>()
+                    {
+                        { "SiteConfigId", siteConfig.Id }
+                    }
+                });
 
                 // Create root folder if not exists
                 if (!Directory.Exists(siteConfig.RootFolder))

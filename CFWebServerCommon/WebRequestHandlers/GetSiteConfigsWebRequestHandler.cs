@@ -16,8 +16,8 @@ namespace CFWebServer.WebRequestHandlers
 
         public GetSiteConfigsWebRequestHandler(IFileCacheService fileCacheService,
                                                 IMimeTypeDatabase mimeTypeDatabase,
-                                                ServerData serverData,
-                                                ISiteConfigService siteConfigService) : base(fileCacheService, mimeTypeDatabase, serverData)
+                                                SiteData siteData,
+                                                ISiteConfigService siteConfigService) : base(fileCacheService, mimeTypeDatabase, siteData)
         {
             _siteConfigService = siteConfigService;
         }

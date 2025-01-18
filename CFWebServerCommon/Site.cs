@@ -6,36 +6,36 @@ using CFWebServer.WebServerComponents;
 namespace CFWebServer
 {
     /// <summary>
-    /// Web server. Serves one website.
+    /// Web site
     /// </summary>
-    public class WebServer : IWebServer, IDisposable
+    public class Site : ISite, IDisposable
     {
         private readonly ICacheService _cacheService;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly IFileCacheService _fileCacheService;        
         private readonly ISiteLogWriter _logWriter;       
-        private readonly ServerData _serverData;
+        private readonly SiteData _siteData;
         private readonly IServerNotifications _serverNotifications;        
         private readonly ISiteConfigService _siteConfigService;
         private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
-        private readonly List<IWebServerComponent> _webServerComponents = new List<IWebServerComponent>();       
+        private readonly List<ISiteComponent> _siteComponents = new List<ISiteComponent>();       
 
         private string _siteConfigUpdatedSubscribeId = String.Empty;                
 
-        public WebServer(ICacheService cacheService,
+        public Site(ICacheService cacheService,
                             IFileCacheService fileCacheService,                            
-                            ISiteLogWriter logWriter,                             
-                            ServerData serverData,
+                            ISiteLogWriter logWriter,                                                         
                             IServerNotifications serverNotifications,                            
                             ISiteConfigService siteConfigService,
+                            SiteData siteData,
                             IWebRequestHandlerFactory webRequestHandlerFactory)                            
         {                                     
             _cacheService = cacheService;
             _fileCacheService = fileCacheService;            
-            _logWriter = logWriter;            
-            _serverData = serverData;
+            _logWriter = logWriter;                        
             _serverNotifications = serverNotifications;            
             _siteConfigService = siteConfigService;
+            _siteData = siteData;
             _webRequestHandlerFactory = webRequestHandlerFactory;                
 
             SubscribeToServerEvents();
@@ -55,13 +55,13 @@ namespace CFWebServer
             _siteConfigUpdatedSubscribeId = _serverNotifications.Subscribe(ServerEventTypes.SiteConfigUpdated, (serverEvent) =>
             {
                 if (serverEvent.EventType == ServerEventTypes.SiteConfigUpdated &&
-                   _serverData.SiteConfig != null)
+                   _siteData.SiteConfig != null)
                 {
                     var siteConfigId = (string)serverEvent.Parameters["SiteConfigId"];
-                    if (siteConfigId == _serverData.SiteConfig.Id)   // This site
+                    if (siteConfigId == _siteData.SiteConfig.Id)   // This site
                     {
-                        _logWriter.Log($"Refreshing site config for {_serverData.SiteConfig.Name}");
-                        _serverData.SiteConfig = _siteConfigService.GetById(_serverData.SiteConfig.Id);
+                        _logWriter.Log($"Refreshing site config for {_siteData.SiteConfig.Name}");
+                        _siteData.SiteConfig = _siteConfigService.GetById(_siteData.SiteConfig.Id);
                         _logWriter.Log("Refreshed site config");
                     }
                 }
@@ -84,24 +84,24 @@ namespace CFWebServer
             }
 
             // Set file cache config
-            _fileCacheService.SetConfig(_serverData.SiteConfig.CacheFileConfig);
+            _fileCacheService.SetConfig(_siteData.SiteConfig.CacheFileConfig);
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _webServerComponents.Clear();       // Sanity check
+            _siteComponents.Clear();       // Sanity check
 
             // Add listener component
-            var listenerComponent = new ListenerComponent(_cacheService, _logWriter, _serverData, 
+            var listenerComponent = new ListenerComponent(_logWriter, _siteData, 
                                                     _cancellationTokenSource.Token);
-            _webServerComponents.Add(listenerComponent);
+            _siteComponents.Add(listenerComponent);
 
             // Add requests component
             var requestsComponent = new RequestsComponent(_cacheService, _fileCacheService, _logWriter, 
-                                                    _serverData, _webRequestHandlerFactory, _cancellationTokenSource.Token);
-            _webServerComponents.Add(requestsComponent);
+                                                    _siteData, _webRequestHandlerFactory, _cancellationTokenSource.Token);
+            _siteComponents.Add(requestsComponent);
 
             // Start components
-            _webServerComponents.ForEach(component => component.Start());
+            _siteComponents.ForEach(component => component.Start());
         }
 
         public void Stop()
@@ -110,13 +110,13 @@ namespace CFWebServer
             _cancellationTokenSource.Cancel();
 
             // Stop components            
-            while (_webServerComponents.Any())
+            while (_siteComponents.Any())
             {
-                _webServerComponents[0].Stop();
-                _webServerComponents.RemoveAt(0);
+                _siteComponents[0].Stop();
+                _siteComponents.RemoveAt(0);
             }
         }
 
-        public bool IsStarted => _webServerComponents.Any();
+        public bool IsStarted => _siteComponents.Any();
     }
 }

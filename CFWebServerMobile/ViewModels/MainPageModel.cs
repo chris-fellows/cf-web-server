@@ -31,7 +31,7 @@ namespace CFWebServerMobile.ViewModels
 
         private CancellationTokenSource? _cancellationTokenSource;
 
-        private IWebServer? _webServer;
+        private CFWebServer.Interfaces.ISite? _site;
 
         public ICommand StartSiteCommand { get; set; }
 
@@ -89,9 +89,9 @@ namespace CFWebServerMobile.ViewModels
             }
         }
 
-        public bool IsStartSiteEnabled => _selectedSiteConfig != null && _webServer == null;
+        public bool IsStartSiteEnabled => _selectedSiteConfig != null && _site == null;
 
-        public bool IsStopSiteEnabled => _selectedSiteConfig != null && _webServer != null;
+        public bool IsStopSiteEnabled => _selectedSiteConfig != null && _site != null;
 
         private void DoStartSite(object parameter)
         {
@@ -99,24 +99,24 @@ namespace CFWebServerMobile.ViewModels
             {
                 ErrorMessage = "None";
 
-                var serverData = new ServerData(TimeSpan.FromSeconds(300), _selectedSiteConfig);
+                var siteData = new SiteData();
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
-                _webServer = new WebServer(_cacheService,
-                        _fileCacheService,                        
-                        _logWriter,
-                        serverData,
+                _site = new Site(_cacheService,
+                        _fileCacheService,                    
+                        _logWriter,                        
                         _serverEventQueue, 
                         _siteConfigService,
+                        siteData,
                         _webRequestHandlerFactory,
                         _cancellationTokenSource.Token);
 
-                _webServer.Start();                
+                _site.Start();                
             }
             catch(Exception exception)
             {
-                _webServer = null;
+                _site = null;
                 ErrorMessage = $"Error starting site: {exception.Message}";
             }
             
@@ -129,8 +129,8 @@ namespace CFWebServerMobile.ViewModels
             // Notify cancel
             _cancellationTokenSource.Cancel();
 
-            _webServer.Stop();
-            _webServer = null;
+            _site.Stop();
+            _site = null;
 
             OnPropertyChanged(nameof(IsStartSiteEnabled));
             OnPropertyChanged(nameof(IsStopSiteEnabled));

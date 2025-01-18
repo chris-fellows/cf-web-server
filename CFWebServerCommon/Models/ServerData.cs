@@ -9,16 +9,16 @@
         ///// Site. E.g. http://localhost:10010
         ///// </summary>
         //public string Site { get; internal set; }
-       
+
         /// <summary>
         /// Site config
         /// </summary>
-        public SiteConfig SiteConfig { get; set; }
+        public SiteConfig SiteConfig { get; set; } = new SiteConfig();
 
         /// <summary>
         /// Interval to log statistics
         /// </summary>
-        public TimeSpan LogStatisticsInterval { get; internal set; }
+        public TimeSpan LogStatisticsInterval { get; set; } = TimeSpan.FromSeconds(60);
 
         /// <summary>
         /// Mutex for shared resources
@@ -34,18 +34,10 @@
         /// Active requests
         /// </summary>
         public List<RequestContext> ActiveRequestContexts = new List<RequestContext>();
-        
+
         /// <summary>
         /// Server statistics
         /// </summary>
-        public ServerStatistics Statistics { get; internal set; }       
-
-        public ServerData(TimeSpan logStatisticsInterval,
-                        SiteConfig siteConfig)
-        {                 
-            LogStatisticsInterval = logStatisticsInterval;            
-            SiteConfig = siteConfig;
-            Statistics = new ServerStatistics();
-        }
+        public ServerStatistics Statistics = new ServerStatistics(); 
     }
 }

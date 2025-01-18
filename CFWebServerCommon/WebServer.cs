@@ -11,51 +11,39 @@ namespace CFWebServer
     public class WebServer : IWebServer, IDisposable
     {
         private readonly ICacheService _cacheService;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly IFileCacheService _fileCacheService;        
-        private readonly ILogWriter _logWriter;       
+        private readonly ISiteLogWriter _logWriter;       
         private readonly ServerData _serverData;
-        private readonly IServerEventQueue _serverEventQueue;
+        private readonly IServerNotifications _serverNotifications;        
         private readonly ISiteConfigService _siteConfigService;
         private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
-        private readonly List<IWebServerComponent> _webServerComponents = new List<IWebServerComponent>();
+        private readonly List<IWebServerComponent> _webServerComponents = new List<IWebServerComponent>();       
 
-        private string _siteConfigUpdatedSubscribeId = String.Empty;
-        private CancellationToken _cancellationToken;
+        private string _siteConfigUpdatedSubscribeId = String.Empty;                
 
         public WebServer(ICacheService cacheService,
                             IFileCacheService fileCacheService,                            
-                            ILogWriter logWriter,                             
+                            ISiteLogWriter logWriter,                             
                             ServerData serverData,
-                            IServerEventQueue serverEventQueue,
+                            IServerNotifications serverNotifications,                            
                             ISiteConfigService siteConfigService,
-                            IWebRequestHandlerFactory webRequestHandlerFactory,
-                            CancellationToken cancellationToken)
-        {                            
-            if (String.IsNullOrEmpty(serverData.SiteConfig.Site))
-            {
-                throw new ArgumentException("Site must be set");
-            }
-            if (String.IsNullOrEmpty(serverData.SiteConfig.RootFolder) &&
-                !String.IsNullOrEmpty(serverData.SiteConfig.Id))        // Root folder isn't set for internal 
-            {
-                throw new ArgumentException("Root Folder must be set");
-            }
-
+                            IWebRequestHandlerFactory webRequestHandlerFactory)                            
+        {                                     
             _cacheService = cacheService;
             _fileCacheService = fileCacheService;            
             _logWriter = logWriter;            
             _serverData = serverData;
-            _serverEventQueue = serverEventQueue;
+            _serverNotifications = serverNotifications;            
             _siteConfigService = siteConfigService;
-            _webRequestHandlerFactory = webRequestHandlerFactory;
-            _cancellationToken = cancellationToken;
+            _webRequestHandlerFactory = webRequestHandlerFactory;                
 
             SubscribeToServerEvents();
 
-            _logWriter.Log($"Site: {_serverData.SiteConfig.Site}");
-            _logWriter.Log($"Root folder: {_serverData.SiteConfig.RootFolder}");
-            _logWriter.Log($"Max concurrent requests: {_serverData.SiteConfig.MaxConcurrentRequests}");            
-            _logWriter.Log($"File cache enabled: {(_serverData.SiteConfig.CacheFileConfig.Expiry > TimeSpan.Zero).ToString()}");
+            //_logWriter.Log($"Site: {_serverData.SiteConfig.Site}");
+            //_logWriter.Log($"Root folder: {_serverData.SiteConfig.RootFolder}");
+            //_logWriter.Log($"Max concurrent requests: {_serverData.SiteConfig.MaxConcurrentRequests}");            
+            //_logWriter.Log($"File cache enabled: {(_serverData.SiteConfig.CacheFileConfig.Expiry > TimeSpan.Zero).ToString()}");
         }
 
         /// <summary>
@@ -64,9 +52,10 @@ namespace CFWebServer
         private void SubscribeToServerEvents()
         {
             // Subscribe to site config updated event. E.g. Permissions updated
-            _siteConfigUpdatedSubscribeId = _serverEventQueue.Subscribe(ServerEventTypes.SiteConfigUpdated, (serverEvent) =>
+            _siteConfigUpdatedSubscribeId = _serverNotifications.Subscribe(ServerEventTypes.SiteConfigUpdated, (serverEvent) =>
             {
-                if (serverEvent.EventType == ServerEventTypes.SiteConfigUpdated)
+                if (serverEvent.EventType == ServerEventTypes.SiteConfigUpdated &&
+                   _serverData.SiteConfig != null)
                 {
                     var siteConfigId = (string)serverEvent.Parameters["SiteConfigId"];
                     if (siteConfigId == _serverData.SiteConfig.Id)   // This site
@@ -83,20 +72,32 @@ namespace CFWebServer
         {
             if (!String.IsNullOrEmpty(_siteConfigUpdatedSubscribeId))
             {
-                _serverEventQueue.Unsubscribe(_siteConfigUpdatedSubscribeId);
+                _serverNotifications.Unsubscribe(_siteConfigUpdatedSubscribeId);
             }
         }
         
         public void Start()
         {
+            if (IsStarted)
+            {
+                throw new ApplicationException("Web server has already started");
+            }
+
+            // Set file cache config
+            _fileCacheService.SetConfig(_serverData.SiteConfig.CacheFileConfig);
+
+            _cancellationTokenSource = new CancellationTokenSource();
+
+            _webServerComponents.Clear();       // Sanity check
+
             // Add listener component
             var listenerComponent = new ListenerComponent(_cacheService, _logWriter, _serverData, 
-                                                    _webRequestHandlerFactory, _cancellationToken);
+                                                    _cancellationTokenSource.Token);
             _webServerComponents.Add(listenerComponent);
 
             // Add requests component
             var requestsComponent = new RequestsComponent(_cacheService, _fileCacheService, _logWriter, 
-                                                    _serverData, _webRequestHandlerFactory, _cancellationToken);
+                                                    _serverData, _webRequestHandlerFactory, _cancellationTokenSource.Token);
             _webServerComponents.Add(requestsComponent);
 
             // Start components
@@ -105,11 +106,17 @@ namespace CFWebServer
 
         public void Stop()
         {
-            while(_webServerComponents.Any())
+            // Instruct components to cancel processing
+            _cancellationTokenSource.Cancel();
+
+            // Stop components            
+            while (_webServerComponents.Any())
             {
                 _webServerComponents[0].Stop();
                 _webServerComponents.RemoveAt(0);
             }
         }
+
+        public bool IsStarted => _webServerComponents.Any();
     }
 }

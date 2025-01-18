@@ -9,16 +9,19 @@ namespace CFWebServer.Services
     public class LocalMemoryFileCache : IFileCacheService
     {
         protected readonly ICacheService _cacheService;
-        protected readonly FileCacheConfig _fileCacheConfig;
+        protected FileCacheConfig? _fileCacheConfig;
 
-        public LocalMemoryFileCache(ICacheService cacheService,
-                                    FileCacheConfig fileCacheConfig)
+        public LocalMemoryFileCache(ICacheService cacheService)                                    
         {
-            _cacheService = cacheService;
+            _cacheService = cacheService;            
+        }
+
+        public void SetConfig(FileCacheConfig fileCacheConfig)
+        {
             _fileCacheConfig = fileCacheConfig;
         }
 
-        public bool Enabled => _fileCacheConfig.Expiry == TimeSpan.Zero;     
+        public bool Enabled => _fileCacheConfig != null && _fileCacheConfig.Expiry == TimeSpan.Zero;     
 
         public int SizeBytes
         {

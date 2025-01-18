@@ -4,15 +4,15 @@ using CFWebServer.Models;
 namespace CFWebServer.Interfaces
 {
     /// <summary>
-    /// Interface for server events
+    /// Interface for server notifications
     /// </summary>
-    public interface IServerEventQueue
+    public interface IServerNotifications
     {
         /// <summary>
-        /// Adds event to queue
+        /// Notifies subscriber(s) of event
         /// </summary>
         /// <param name="serverEvent"></param>
-        void Add(ServerEvent serverEvent);
+        void Notify(ServerEvent serverEvent);
 
         /// <summary>
         /// Subscribes to receive events

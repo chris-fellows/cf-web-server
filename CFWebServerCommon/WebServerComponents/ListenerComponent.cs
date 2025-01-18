@@ -1,7 +1,6 @@
 ﻿using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using System.Net;
-using System.Runtime.Serialization.Formatters;
 
 namespace CFWebServer.WebServerComponents
 {
@@ -11,35 +10,25 @@ namespace CFWebServer.WebServerComponents
     internal class ListenerComponent : IWebServerComponent
     {
         private Thread? _thread;
-
-        private readonly ICacheService _cacheService;        
-
+        
         private HttpListener? _listener;
-        private ILogWriter _logWriter;
+        private ISiteLogWriter _logWriter;
 
         private readonly ServerData _serverData;
-
-        private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
-
+        
         private CancellationToken _cancellationToken;
 
-        public ListenerComponent(ICacheService cacheService,                            
-                            ILogWriter logWriter,
-                            ServerData serverData,
-                            IWebRequestHandlerFactory webRequestHandlerFactory,
+        public ListenerComponent(ISiteLogWriter logWriter,
+                            ServerData serverData,                            
                             CancellationToken cancellationToken)
-        {
-            _cacheService = cacheService;
+        {            
             _logWriter = logWriter;
-            _serverData = serverData;
-            _webRequestHandlerFactory = webRequestHandlerFactory;
+            _serverData = serverData;            
             _cancellationToken = cancellationToken;
         }
 
         public void Start()
-        {
-            //var prefix = $"http://localhost:{_serverData.ReceivePort}/";
-
+        {            
             _logWriter.Log($"Starting listening for requests at {_serverData.SiteConfig.Site}");
 
             if (!HttpListener.IsSupported)
@@ -61,6 +50,8 @@ namespace CFWebServer.WebServerComponents
         {
             _logWriter.Log("Stopping listening");
 
+            _listener.Stop();
+
             if (_thread != null)
             {
                 _thread.Join();
@@ -74,30 +65,24 @@ namespace CFWebServer.WebServerComponents
         {
             while (!_cancellationToken.IsCancellationRequested)
             {
-                // Get listener context
-                HttpListenerContext listenerContext = _listener.GetContext();
+                try
+                {
+                    // Get listener context
+                    HttpListenerContext listenerContext = _listener.GetContext();
 
-                // Add request to queue
-                RequestContext requestContext = new RequestContext(listenerContext.Request, listenerContext.Response);
-                _serverData.Mutex.WaitOne();
-                _serverData.RequestContextQueue.Enqueue(requestContext);
-                _serverData.Statistics.CountRequestsReceived++;
-                _serverData.Statistics.LastRequestReceivedTime = DateTimeOffset.UtcNow;
-                _serverData.Mutex.ReleaseMutex();
-
-                /*
-                // Peel out the requests and response objects
-                HttpListenerRequest request = listenerContext.Request;
-                HttpListenerResponse response = listenerContext.Response;
-
-                // Print out some info about the request                
-                Console.WriteLine(request.Url.ToString());
-                Console.WriteLine(request.HttpMethod);
-                Console.WriteLine(request.UserHostName);
-                Console.WriteLine(request.UserAgent);
-                Console.WriteLine();               
-                */
-
+                    // Add request to queue
+                    RequestContext requestContext = new RequestContext(listenerContext.Request, listenerContext.Response);
+                    _serverData.Mutex.WaitOne();
+                    _serverData.RequestContextQueue.Enqueue(requestContext);
+                    _serverData.Statistics.CountRequestsReceived++;
+                    _serverData.Statistics.LastRequestReceivedTime = DateTimeOffset.UtcNow;
+                    _serverData.Mutex.ReleaseMutex();
+                }
+                catch (HttpListenerException)
+                {
+                    if (!_cancellationToken.IsCancellationRequested) throw;                    
+                }
+            
                 Thread.Yield();
             }
         }

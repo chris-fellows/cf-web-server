@@ -16,6 +16,12 @@ namespace CFWebServer.Interfaces
         /// Cache size (Bytes)
         /// </summary>
         int SizeBytes { get; }
+
+        /// <summary>
+        /// Sets config
+        /// </summary>
+        /// <param name="fileCacheConfig"></param>
+        void SetConfig(FileCacheConfig fileCacheConfig);
         
         /// <summary>
         /// Whether file meets rules for caching. E.g. Not too big.

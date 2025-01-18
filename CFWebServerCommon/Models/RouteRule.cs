@@ -1,12 +1,20 @@
 ﻿namespace CFWebServer.Models
 {
     /// <summary>
-    /// Defines a route rule which maps an incoming request to a web request handler
+    /// Defines a route rule which maps an incoming request to a web request handler.
     /// </summary>
     public class RouteRule : ICloneable
     {
         /// <summary>
-        /// HTTP method(s) that route rule is valid for
+        /// Priority for handling multiple applicable rules. Highest priority wins.
+        /// 
+        /// E.g. Rule 1 for static GET rule for all resources (Priority 1) but overriden for .ps1 files by
+        /// rule 2 (Priority 2)
+        /// </summary>
+        public int Priority { get; set; }
+
+        /// <summary>
+        /// HTTP method(s) that route rule is valid for. If not set then any method.
         /// </summary>
         public List<string> Methods = new List<string>();
 
@@ -33,6 +41,7 @@
         {
             var routeRule = new RouteRule()
             {
+                Priority = Priority,
                 Methods = new List<string>(Methods),
                 RelativePathPatterns = new List<string>(RelativePathPatterns),
                 AuthorizationRuleIds = new List<string>(AuthorizationRuleIds),

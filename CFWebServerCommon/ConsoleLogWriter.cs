@@ -3,7 +3,10 @@ using CFWebServer.Models;
 
 namespace CFWebServer
 {
-    public class DefaultLogWriter : ILogWriter
+    /// <summary>
+    /// Log writer to console
+    /// </summary>
+    public class ConsoleLogWriter : ISiteLogWriter
     {
         public void Log(string message)
         {
@@ -16,10 +19,10 @@ namespace CFWebServer
                             $"URL={requestContext.Request.Url.ToString()}");
         }
 
-        public void LogResponse(RequestContext requestContext)
-        {
-            Console.WriteLine($"{DateTimeOffset.UtcNow.ToString()} Response: Method={requestContext.Request.HttpMethod}; " +
-                            $"URL={requestContext.Request.Url.ToString()}; Status={requestContext.Response.StatusCode}");
-        }
+        //public void LogResponse(RequestContext requestContext)
+        //{
+        //    Console.WriteLine($"{DateTimeOffset.UtcNow.ToString()} Response: Method={requestContext.Request.HttpMethod}; " +
+        //                    $"URL={requestContext.Request.Url.ToString()}; Status={requestContext.Response.StatusCode}");
+        //}
     }
 }

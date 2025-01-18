@@ -92,7 +92,7 @@ namespace CFWebServer
         /// <param name="requestContext"></param>
         /// <param name="serverData"></param>
         /// <returns></returns>
-        private RouteRule? GetRouteRule(RequestContext requestContext, ServerData serverData)
+        private RouteRule? GetRouteRule(RequestContext requestContext, SiteConfig siteConfig)
         {
             var relativePath = requestContext.Request.Url.AbsolutePath;
 
@@ -101,7 +101,7 @@ namespace CFWebServer
             var request = requestContext.Request;
 
             // Filter route rules by method
-            var routeRules = serverData.SiteConfig.RouteRules.Where(rr => rr.Methods == null ||
+            var routeRules = siteConfig.RouteRules.Where(rr => rr.Methods == null ||
                                                 !rr.Methods.Any() ||
                                                 (rr.Methods.Any() && rr.Methods.Contains(request.HttpMethod))).ToList();            
 
@@ -114,8 +114,8 @@ namespace CFWebServer
                                                 (rr.RelativePathPatterns.Any(rr => rr.Equals($"#extension#:{urlFileExtension}"))) ||
                                                 (rr.RelativePathPatterns.Any() && rr.RelativePathPatterns.Any(rp => HttpUtilities.IsRelativeUrlMatchesPattern(relativePath, rp, '*')))).ToList();
 
-            // Return first rule                        
-            return routeRules.LastOrDefault();
+            // Return highest priority rule
+            return routeRules.OrderByDescending(rr => rr.Priority).LastOrDefault();
         }
        
         public IWebRequestHandler? Get(RequestContext requestContext, ServerData serverData)
@@ -125,7 +125,7 @@ namespace CFWebServer
             var request = requestContext.Request;
 
             // Get route rule
-            var routeRule = GetRouteRule(requestContext, serverData);
+            var routeRule = GetRouteRule(requestContext, serverData.SiteConfig);
 
             // Get all web request handlers
             var allWebRequestHandlers = GetAll(serverData);

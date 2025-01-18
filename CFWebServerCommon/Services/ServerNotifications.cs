@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CFWebServer.Services
 {
-    public class ServerEventQueue : IServerEventQueue
+    public class ServerNotifications : IServerNotifications
     {
         private class Subscription
         {
@@ -29,7 +29,7 @@ namespace CFWebServer.Services
 
         private List<Subscription> _subscriptions = new List<Subscription>();
 
-        public void Add(ServerEvent serverEvent)
+        public void Notify(ServerEvent serverEvent)
         {
             var subscriptions = _subscriptions.Where(s => s.EventType == serverEvent.EventType);
             foreach(var subscription in subscriptions)

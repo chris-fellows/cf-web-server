@@ -14,14 +14,14 @@ namespace CFWebServer.WebServerComponents
 
         private readonly ICacheService _cacheService;
         private readonly IFileCacheService _fileCacheService;
-        private readonly ILogWriter _logWriter;
+        private readonly ISiteLogWriter _logWriter;
         private readonly ServerData _serverData;        
         private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
         private CancellationToken _cancellationToken;
 
         public RequestsComponent(ICacheService cacheService,
                             IFileCacheService fileCacheService,
-                            ILogWriter logWriter,
+                            ISiteLogWriter logWriter,
                             ServerData serverData,                            
                             IWebRequestHandlerFactory webRequestHandlerFactory,
                             CancellationToken cancellationToken)
@@ -110,9 +110,7 @@ namespace CFWebServer.WebServerComponents
                 }
 
                 Thread.Yield();
-            }
-
-            int xxx = 1000;
+            }            
         }
      
         /// <summary>

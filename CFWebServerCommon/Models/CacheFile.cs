@@ -1,4 +1,5 @@
 ﻿using CFWebServer.Utilities;
+using System.Text;
 
 namespace CFWebServer.Models
 {
@@ -31,7 +32,9 @@ namespace CFWebServer.Models
         {
             get
             {
-                return _content.Length;
+                return _content.Length +
+                    Encoding.UTF8.GetByteCount(RelativePath) +  // RelativePath
+                    sizeof(bool);   // Compressed                    
             }
         }
 

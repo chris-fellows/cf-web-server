@@ -28,7 +28,7 @@ namespace CFWebServerMobile
             //builder.Services.AddSingleton<IWebServer, IWebServer>();
             builder.Services.AddSingleton<IWebRequestHandlerFactory, WebRequestHandlerFactory>();
 
-            builder.Services.AddSingleton<IServerEventQueue, ServerEventQueue>();
+            builder.Services.AddSingleton<IServerNotifications, ServerNotifications>();
 
             // Set config data services
             //builder.Services.AddSingleton<IFolderConfigService>((scope) =>
@@ -102,7 +102,7 @@ namespace CFWebServerMobile
                 return new LocalMemoryFileCache(cacheService, siteConfig.CacheFileConfig);
             });
 
-            builder.Services.AddTransient<ILogWriter, DefaultLogWriter>();
+            builder.Services.AddTransient<ISiteLogWriter, ConsoleLogWriter>();
 
             // Register pages & models
             builder.Services.AddSingleton<MainPageModel>();

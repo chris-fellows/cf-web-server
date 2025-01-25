@@ -9,24 +9,27 @@ namespace CFWebServer.WebRequestHandlers
 {
     /// <summary>
     /// Handles PowerShell script web request
-    /// 
-    /// Notes: 
-    /// - Script input: 
+    ///   
+    /// Script input: 
     ///         - Method (String)
     ///         - URL (String)
     ///         - Content-Base64=[Content Base 64]
-    ///         - Parameters (Dictionary).
-    /// - Script output:
+    ///         - Form (Dictionary)
+    ///         - Parameters (Dictionary)
+    ///         - Headers (Dictionary)
+    ///         - SiteParameters (Dictionary) E.g. Connection string
+    ///         
+    /// Script output:
     ///         - Content-Type=[Content Type]
     ///         - Content=[Content]
     ///         - Content-Base64=[Content Base 64]
-    ///         - Status-Code=[Status Code]
+    ///         - Status-Code=[Status Code]    
     /// </summary>
     public class PowerShellWebRequestHandler : WebRequestHandlerBase, IWebRequestHandler
     {
         public PowerShellWebRequestHandler(IFileCacheService fileCacheService,
                                                 IMimeTypeDatabase mimeTypeDatabase,
-                                                 SiteData serverData) : base(fileCacheService, mimeTypeDatabase, serverData)
+                                                 SiteData siteData) : base(fileCacheService, mimeTypeDatabase, siteData)
         {
 
         }
@@ -44,15 +47,12 @@ namespace CFWebServer.WebRequestHandlers
             var request = requestContext.Request;
             var response = requestContext.Response;
             
-            var messages = new List<string>();
+            var messages = new List<string>();      // Debug messages
 
             int statusCode = (int)HttpStatusCode.OK;
             var contentType = "";
             var content = new byte[0];
-
-            // Get request parameters
-            var parameters = GetParameters(requestContext);
-
+            
             using (var powerShell = PowerShell.Create())
             {
                 // Set script, ideally cached
@@ -84,13 +84,19 @@ namespace CFWebServer.WebRequestHandlers
                 // Set parameters                
                 powerShell.AddParameter("Method", requestContext.Request.HttpMethod.ToString());
                 powerShell.AddParameter("URL", relativePath);                
-                powerShell.AddParameter("Parameters", parameters);
+                powerShell.AddParameter("Parameters", GetParameters(requestContext));
+                powerShell.AddParameter("Headers", GetHeaders(requestContext));
+                powerShell.AddParameter("SiteParameters", GetSiteParameters(requestContext, _siteData.SiteConfig));
 
-                // Content content
+                // Set content (Base 64) and form content
                 using (var memoryStream = new MemoryStream())
                 {
-                    await request.InputStream.CopyToAsync(memoryStream);
-                    powerShell.AddParameter("Content-Base64", Convert.ToBase64String(memoryStream.ToArray()));
+                    await request.InputStream.CopyToAsync(memoryStream);                    
+                    var contentBytes = memoryStream.ToArray();
+
+                    powerShell.AddParameter("Content-Base64", Convert.ToBase64String(contentBytes));
+
+                    powerShell.AddParameter("Form", GetForm(requestContext, contentBytes));
                 }
 
                 var pipelineObjects = await powerShell.InvokeAsync().ConfigureAwait(false);
@@ -202,18 +208,86 @@ namespace CFWebServer.WebRequestHandlers
             //}
         }
 
+        /// <summary>
+        /// Gets request parameters from querystring
+        /// </summary>
+        /// <param name="requestContext"></param>
+        /// <returns></returns>
         private static Dictionary<string, string> GetParameters(RequestContext requestContext)
         {
             // Get 
             var parameters = new Dictionary<string, string>();
-            foreach (var param in requestContext.Request.Url.Query.Substring(1).Split('&'))
+
+            if (requestContext.Request.Url != null &&
+                requestContext.Request.Url.Query.Length > 0)
             {
-                var paramName = param.Split('=')[0];
-                var paramValue = param.Split('=')[1];
-                parameters.Add(paramName, paramValue);
+                foreach (var param in requestContext.Request.Url.Query.Substring(1).Split('&'))
+                {
+                    var paramName = param.Split('=')[0];
+                    var paramValue = param.Split('=')[1];
+                    parameters.Add(paramName, paramValue);
+                }
             }
 
             return parameters;
+        }
+
+        /// <summary>
+        /// Gets request headers
+        /// </summary>
+        /// <param name="requestContext"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetHeaders(RequestContext requestContext)
+        {
+            var headers = new Dictionary<string, string>();
+            foreach(var header in requestContext.Request.Headers.Keys)
+            {
+                headers.Add(header.ToString(), requestContext.Request.Headers[header.ToString()].ToString());
+            }
+
+            return headers;
+        }
+
+        /// <summary>
+        /// Gets request form
+        /// </summary>
+        /// <param name="requestContext"></param>
+        /// <param name="contentBytes"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetForm(RequestContext requestContext, byte[]? contentBytes)
+        {
+            var form = new Dictionary<string, string>();
+
+            if (contentBytes != null && contentBytes.Length > 0)
+            {
+                var data = System.Text.Encoding.UTF8.GetString(contentBytes);
+
+                foreach(var param in data.Split('&'))
+                {
+                    var paramName = param.Split('=')[0];
+                    var paramValue = param.Split('=')[1];
+                    form.Add(paramName, paramValue);
+                }
+            }
+
+            return form;
+        }
+
+        /// <summary>
+        /// Returns request site parameters. E.g. Connection string etc.
+        /// </summary>
+        /// <param name="requestContext"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetSiteParameters(RequestContext requestContext, SiteConfig siteConfig)
+        {
+            var siteParameters = new Dictionary<string, string>();
+
+            foreach(var siteParameter in siteConfig.Parameters)
+            {
+                siteParameters.Add(siteParameter.Name, siteParameter.Value);
+            }
+
+            return siteParameters;
         }
     }
 }

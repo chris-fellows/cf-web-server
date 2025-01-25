@@ -36,6 +36,8 @@ Example to run a website for an existing site config:
 An internal web site is hosted so that sites can be configured via HTTP.
 
 # PowerShell Web Request Handler
-The web server can handle dynamic content via PowerShell scripts.
+The web server can handle dynamic content via PowerShell scripts. Each script must accept a standard set of
+input parameters (Request, site parameters) and writes a standard set of output parameters (Response).
 
-See example in \Scripts\PowerShell Web Request Handler Sample
+See example in \Scripts\PowerShell Web Request Handler Sample. It prompts the user for some parameters and
+then posts the HTML Form to a PowerScript which returns an HTML page.

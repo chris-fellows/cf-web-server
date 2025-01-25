@@ -14,17 +14,20 @@ namespace CFWebServer
     {
         private readonly List<IAuthorizationManager> _authorizationManagers;
         private readonly IFileCacheService _fileCacheService;
-        private readonly IMimeTypeDatabase _mimeTypeDatabase;        
+        private readonly IMimeTypeDatabase _mimeTypeDatabase;
+        private readonly IServerNotifications _serverNotifications;
         private readonly ISiteConfigService _siteConfigService;
 
         public WebRequestHandlerFactory(IEnumerable<IAuthorizationManager> authorizationManagers,
                                         IFileCacheService fileCacheService,                                        
                                         IMimeTypeDatabase mimeTypeDatabase,                                        
+                                        IServerNotifications serverNotifications,
                                         ISiteConfigService siteConfigService)
         {
             _authorizationManagers = authorizationManagers.ToList();
             _fileCacheService = fileCacheService;
-            _mimeTypeDatabase = mimeTypeDatabase;            
+            _mimeTypeDatabase = mimeTypeDatabase;
+            _serverNotifications = serverNotifications;
             _siteConfigService = siteConfigService;
         }     
 
@@ -42,15 +45,19 @@ namespace CFWebServer
                 // Site config
                 new GetSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, siteData, _siteConfigService),
                 new GetSiteConfigsWebRequestHandler(_fileCacheService, _mimeTypeDatabase, siteData, _siteConfigService),
-                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PostSiteConfig, siteData, _siteConfigService),
-                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PutSiteConfig, siteData, _siteConfigService),
+                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PostSiteConfig, 
+                                    _serverNotifications, siteData, _siteConfigService),
+                new PostOrPutSiteConfigWebRequestHandler(_fileCacheService, _mimeTypeDatabase, WebRequestHandlerNames.PutSiteConfig, 
+                                    _serverNotifications, siteData, _siteConfigService),
 
                 // PowerShell resources (.ps1)
                 new PowerShellWebRequestHandler(_fileCacheService, _mimeTypeDatabase, siteData),
 
                 // Specific status code
-                new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeNotFound, HttpStatusCode.NotFound, _mimeTypeDatabase,  siteData),
-                new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeUnauthorized, HttpStatusCode.Unauthorized, _mimeTypeDatabase,  siteData)
+                new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeNotFound, HttpStatusCode.NotFound, 
+                                    _mimeTypeDatabase,  siteData),
+                new StatusCodeWebRequestHandler(_fileCacheService, WebRequestHandlerNames.StatusCodeUnauthorized, HttpStatusCode.Unauthorized, 
+                                    _mimeTypeDatabase,  siteData)
             };            
 
             return list;
@@ -87,7 +94,8 @@ namespace CFWebServer
         }
 
         /// <summary>
-        /// Gets the route rule for the request
+        /// Gets the route rule for the request. If more than two final routes then return the highest priority. Static web 
+        /// request handler typically has lowest priority.
         /// </summary>
         /// <param name="requestContext"></param>
         /// <param name="siteConfig"></param>
@@ -115,7 +123,7 @@ namespace CFWebServer
                                                 (rr.RelativePathPatterns.Any() && rr.RelativePathPatterns.Any(rp => HttpUtilities.IsRelativeUrlMatchesPattern(relativePath, rp, '*')))).ToList();
 
             // Return highest priority rule
-            return routeRules.OrderByDescending(rr => rr.Priority).LastOrDefault();
+            return routeRules.OrderBy(rr => rr.Priority).LastOrDefault();
         }
        
         public IWebRequestHandler? Get(RequestContext requestContext, SiteData siteData)

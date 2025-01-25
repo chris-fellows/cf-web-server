@@ -38,7 +38,12 @@
         /// <summary>
         /// Whether site is enabled
         /// </summary>
-        public bool Enabled { get; set; } 
+        public bool Enabled { get; set; }
+
+        /// <summary>
+        /// Site parameters. E.g. Connection string
+        /// </summary>
+        public List<SiteParameter> Parameters = new List<SiteParameter>();
 
         /// <summary>
         /// File cache config
@@ -71,6 +76,7 @@
                 DefaultFile = DefaultFile,
                 MaxConcurrentRequests = MaxConcurrentRequests,
                 Enabled = Enabled,
+                Parameters = (Parameters.Select(p => (SiteParameter)p.Clone())).ToList(),
                 CacheFileConfig = (FileCacheConfig)CacheFileConfig.Clone(),
                 FolderConfigs = FolderConfigs.Select(fc => (FolderConfig)fc.Clone()).ToList(),
                 AuthorizationRules = AuthorizationRules.Select(fc => (AuthorizationRule)fc.Clone()).ToList(),

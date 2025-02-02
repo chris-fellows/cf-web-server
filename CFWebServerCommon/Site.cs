@@ -96,7 +96,7 @@ namespace CFWebServer
             _siteComponents.Add(listenerComponent);
 
             // Add requests component
-            var requestsComponent = new RequestsComponent(_cacheService, _fileCacheService, _logWriter, 
+            var requestsComponent = new RequestsComponent(_fileCacheService, _logWriter, 
                                                     _siteData, _webRequestHandlerFactory, _cancellationTokenSource.Token);
             _siteComponents.Add(requestsComponent);
 

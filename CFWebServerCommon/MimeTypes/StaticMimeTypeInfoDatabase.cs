@@ -1,7 +1,7 @@
 ﻿using CFWebServer.Interfaces;
 using CFWebServer.Models;
 
-namespace CFWebServer
+namespace CFWebServer.MimeTypes
 {
     /// <summary>
     /// MIME type database from static list
@@ -704,5 +704,5 @@ namespace CFWebServer
         {
             return GetAll().Where(mt => mt.FileExtensions.Contains(fileExtension.ToLower())).ToList();
         }
-    }    
+    }
 }

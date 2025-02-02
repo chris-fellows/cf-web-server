@@ -1,12 +1,14 @@
 ﻿using CFWebServer;
 using CFWebServer.AuthorizationManagers;
 using CFWebServer.Interfaces;
+using CFWebServer.MimeTypes;
 using CFWebServer.Models;
 using CFWebServer.Services;
-using CFWebServerCommon;
+using CFWebServer.LogWriters;
+using CFWebServer.Utilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
+using System.Net;
 
 namespace CFWebServerConsole
 {
@@ -27,17 +29,40 @@ namespace CFWebServerConsole
             var serviceProvider = CreateServiceProvider();
                         
             Console.WriteLine("Starting CF Web Server");
+            var localIP = GetLocalIP(true);
+            Console.WriteLine($"Local IP: {localIP}");
             
             // Create sites to start
             IWebServer webServer = new WebServer();
-            CreateSites(serviceProvider.GetRequiredService<ISiteConfigService>(),
-                                            serviceProvider.GetRequiredService<ISiteFactory>())
-                .ForEach(site => webServer.Add(site));
+
+            var siteConfigService = serviceProvider.GetRequiredService<ISiteConfigService>();
+            var siteFactory = serviceProvider.GetRequiredService<ISiteFactory>();
+
+            // Create default site if no sites
+            var siteConfigs = siteConfigService.GetAll();            
+            if (!siteConfigs.Any())
+            {
+                var siteRootFolder = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Root", "Test1");
+                //siteConfigs.Add(CreateDefaultSite(siteRootFolder, "Test 1", "http://0.0.0.0:10010/", siteConfigService, siteFactory));   // Errors on listen
+                //siteConfigs.Add(CreateDefaultSite(siteRootFolder, "Test 1", "http://localhost:10010/", siteConfigService, siteFactory));
+                siteConfigs.Add(CreateDefaultSite(siteRootFolder, "Test 1", $"http://{localIP}:10010/", siteConfigService, siteFactory));
+            }
+
+            // Create sites
+            CreateSites(siteConfigService, siteFactory, siteConfigs).ForEach(site => webServer.Add(site));
 
             // Start sites
             webServer.Sites.ForEach(site => site.Start());
 
+            /*
             // Wait for user to press escape
+            do
+            {
+                Thread.Sleep(100);
+                Thread.Yield();
+            } while (true);
+            */
+            
             do
             {
                 Console.WriteLine("Press ESCAPE to stop");  // Also displayed if user presses other key
@@ -55,6 +80,55 @@ namespace CFWebServerConsole
 
             Console.WriteLine("Terminated CF Web Server");
         }
+        
+        private static SiteConfig CreateDefaultSite(string folder,
+                                                string name,
+                                                string site,
+                                               ISiteConfigService siteConfigService,
+                                               ISiteFactory siteFactory)
+        {
+            Console.WriteLine($"Creating default site in {folder}");
+
+            WebSiteUtilities.CreateSimpleWebsite(folder);
+
+            var siteConfig = new SiteConfig()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = name,
+                DefaultFile = "Index.html",
+                MaxConcurrentRequests = 20,
+                Enabled = true,
+                RootFolder = folder,
+                Site = site,
+                CacheFileConfig = new FileCacheConfig()
+                {
+                    Compressed = true,
+                    Expiry = TimeSpan.Zero,     // Cache disabled,
+                    MaxFileSizeBytes = 1024 * 1000,
+                    MaxTotalSizeBytes = 1024 * 10000
+                },
+                //FolderConfigs = new List<FolderConfig>()
+                //        {
+                //            new FolderConfig()
+                //            {
+                //                Id = Guid.NewGuid().ToString(),
+                //                RelativePath = "/",     // Root
+                //                Permissions = new List<FolderPermissions>()
+                //                {
+                //                    FolderPermissions.Read
+                //                }
+                //            }
+                //        }
+            };
+            siteConfigService.Add(siteConfig);
+
+            //var site = siteFactory.CreateSiteById(siteConfig.Id);
+            //return site;
+
+            Console.WriteLine("Creating default site");
+
+            return siteConfig;
+        }
 
         /// <summary>
         /// Gets sites to start
@@ -63,7 +137,8 @@ namespace CFWebServerConsole
         /// <param name="siteFactory"></param>
         /// <returns></returns>
         private static List<ISite> CreateSites(ISiteConfigService siteConfigService,
-                                               ISiteFactory siteFactory)
+                                               ISiteFactory siteFactory,
+                                               List<SiteConfig> siteConfigs)
         {
             // Process command line args
             var internalSite = "";
@@ -99,10 +174,8 @@ namespace CFWebServerConsole
                 sites.Add(siteFactory.CreateSiteById(siteCongfigId));
             }
             else    // All enabled sites
-            {
-                var siteConfigs = siteConfigService.GetAll().Where(sc => sc.Enabled);
-
-                foreach (var siteConfig in siteConfigs)
+            {                
+                foreach (var siteConfig in siteConfigs.Where(sc => sc.Enabled))
                 {
                     sites.Add(siteFactory.CreateSiteById(siteConfig.Id));
                 }
@@ -168,5 +241,22 @@ namespace CFWebServerConsole
         //        services.Add(new ServiceDescriptor(typeof(T), type, lifetime));
         //    }
         //}
+
+        private static string GetLocalIP(bool listAddresses)
+        {
+            string hostName = Dns.GetHostName(); // Retrive the Name of HOST
+            
+            var hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+
+            if (listAddresses)
+            {
+                foreach(var address in hostEntry.AddressList)
+                {
+                    Console.WriteLine($"IP: {address.ToString()}");
+                }
+            }            
+
+            return hostEntry.AddressList[0].ToString();
+        }
     }
 }

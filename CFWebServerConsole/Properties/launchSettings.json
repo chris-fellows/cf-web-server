@@ -3,6 +3,9 @@
     "CFWebServer": {
       "commandName": "Project",
       "commandLineArgs": "/site-config-id=\"49cfe41d-0526-45c6-97eb-4afbd42144bf\" /site-internal-site=\"http://localhost:10011/\""
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
     }
   }
 }

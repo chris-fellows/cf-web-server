@@ -5,7 +5,7 @@ using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CFWebServerCommon
+namespace CFWebServer
 {
     public class SiteFactory : ISiteFactory
     {        
@@ -208,7 +208,7 @@ namespace CFWebServerCommon
                 var webRequestHandlerFactory = scope.ServiceProvider.GetRequiredService<IWebRequestHandlerFactory>();
 
                 // Initialise site
-                var website = new Site(cacheService,
+                var site = new Site(cacheService,
                                                 fileCacheService,
                                                 logWriter,                                                
                                                 _serverNotifications,                                                
@@ -216,7 +216,7 @@ namespace CFWebServerCommon
                                                 siteData,
                                                 webRequestHandlerFactory);
 
-                return website;
+                return site;
             }
         }
     }

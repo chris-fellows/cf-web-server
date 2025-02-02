@@ -70,6 +70,8 @@ namespace CFWebServer.WebServerComponents
                     // Get listener context
                     HttpListenerContext listenerContext = _listener.GetContext();
 
+                    Console.WriteLine("Received request");
+
                     // Add request to queue
                     RequestContext requestContext = new RequestContext(listenerContext.Request, listenerContext.Response);
                     _siteData.Mutex.WaitOne();
@@ -82,8 +84,8 @@ namespace CFWebServer.WebServerComponents
                 {
                     if (!_cancellationToken.IsCancellationRequested) throw;                    
                 }
-            
-                Thread.Yield();
+
+                Thread.Sleep(1);
             }
         }
     }

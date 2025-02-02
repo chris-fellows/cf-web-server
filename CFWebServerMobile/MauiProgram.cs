@@ -3,8 +3,8 @@ using CFWebServer.Enums;
 using CFWebServer.Interfaces;
 using CFWebServer.Models;
 using CFWebServer.Services;
-using CFWebServerCommon.Utilities;
-using CFWebServerMobile.Utilities;
+using CFWebServer.LogWriters;
+using CFWebServer.Utilities;
 using CFWebServerMobile.ViewModels;
 using Microsoft.Extensions.Logging;
 
@@ -99,7 +99,7 @@ namespace CFWebServerMobile
                 var siteConfig = siteConfigService.GetAll().First();
 
                 // TODO: Fix this to get SiteConfig from correct location
-                return new LocalMemoryFileCache(cacheService, siteConfig.CacheFileConfig);
+                return new LocalMemoryFileCache(cacheService);
             });
 
             builder.Services.AddTransient<ISiteLogWriter, ConsoleLogWriter>();

@@ -1,7 +1,7 @@
 ﻿using CFWebServer.Interfaces;
 using CFWebServer.Models;
 
-namespace CFWebServer
+namespace CFWebServer.LogWriters
 {
     /// <summary>
     /// CSV site log writer
@@ -9,7 +9,7 @@ namespace CFWebServer
     public class CSVSiteLogWriter : ISiteLogWriter
     {
         private readonly string _folder;
-        private const Char _delimiter = (Char)9;
+        private const char _delimiter = (char)9;
 
         public CSVSiteLogWriter(string folder)
         {
@@ -24,7 +24,7 @@ namespace CFWebServer
             var logFile = Path.Combine(_folder, $"Log-{time.ToString("yyyy-MM-dd")}.txt");
 
             var isWriteHeaders = !File.Exists(logFile);
-            
+
             using (var stream = new StreamWriter(logFile))
             {
                 if (isWriteHeaders)
@@ -49,7 +49,7 @@ namespace CFWebServer
 
             var request = requestContext.Request;
             var response = requestContext.Response;
-            
+
             using (var stream = new StreamWriter(logFile))
             {
                 if (isWriteHeaders)

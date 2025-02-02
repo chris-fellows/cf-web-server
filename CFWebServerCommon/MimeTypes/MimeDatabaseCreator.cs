@@ -4,7 +4,7 @@
 //using System.Text;
 //using System.Threading.Tasks;
 
-//namespace CFWebServerCommon
+//namespace CFWebServer.MimeTypes
 //{
 //    public class MimeDatabaseCreator
 //    {

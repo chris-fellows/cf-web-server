@@ -1,7 +1,7 @@
 ﻿using CFWebServer.Interfaces;
 using CFWebServer.Models;
 
-namespace CFWebServer
+namespace CFWebServer.LogWriters
 {
     /// <summary>
     /// Log writer to console

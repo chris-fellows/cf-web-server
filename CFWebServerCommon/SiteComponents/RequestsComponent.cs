@@ -11,22 +11,19 @@ namespace CFWebServer.WebServerComponents
     internal class RequestsComponent : ISiteComponent
     {
         private Thread? _thread;
-
-        private readonly ICacheService _cacheService;
+        
         private readonly IFileCacheService _fileCacheService;
         private readonly ISiteLogWriter _logWriter;
         private readonly SiteData _siteData;        
         private readonly IWebRequestHandlerFactory _webRequestHandlerFactory;
         private CancellationToken _cancellationToken;
 
-        public RequestsComponent(ICacheService cacheService,
-                            IFileCacheService fileCacheService,
+        public RequestsComponent(IFileCacheService fileCacheService,
                             ISiteLogWriter logWriter,
                             SiteData siteData,                            
                             IWebRequestHandlerFactory webRequestHandlerFactory,
                             CancellationToken cancellationToken)
         {
-            _cacheService = cacheService;
             _fileCacheService = fileCacheService;
             _logWriter = logWriter;
             _siteData = siteData;            
@@ -109,7 +106,7 @@ namespace CFWebServer.WebServerComponents
                     LogStatistics(_siteData.Statistics);
                 }
 
-                Thread.Yield();
+                Thread.Sleep(1);
             }            
         }
      

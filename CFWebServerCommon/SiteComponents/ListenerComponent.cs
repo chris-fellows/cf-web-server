@@ -50,7 +50,11 @@ namespace CFWebServer.WebServerComponents
         {
             _logWriter.Log("Stopping listening");
 
-            _listener.Stop();
+            if (_listener != null)
+            {
+                _listener.Stop();
+                _listener = null;
+            }
 
             if (_thread != null)
             {
@@ -73,12 +77,14 @@ namespace CFWebServer.WebServerComponents
                     Console.WriteLine("Received request");
 
                     // Add request to queue
-                    RequestContext requestContext = new RequestContext(listenerContext.Request, listenerContext.Response);
+                    var requestContext = new RequestContext(listenerContext.Request, listenerContext.Response);
                     _siteData.Mutex.WaitOne();
                     _siteData.RequestContextQueue.Enqueue(requestContext);                    
                     _siteData.Statistics.CountRequestsReceived = (_siteData.Statistics.CountRequestsReceived % int.MaxValue) + 1;
                     _siteData.Statistics.LastRequestReceivedTime = DateTimeOffset.UtcNow;
                     _siteData.Mutex.ReleaseMutex();
+
+                    Thread.Sleep(1);
                 }
                 catch (HttpListenerException)
                 {

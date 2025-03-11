@@ -39,11 +39,6 @@ namespace CFWebServer
             _webRequestHandlerFactory = webRequestHandlerFactory;                
 
             SubscribeToServerEvents();
-
-            //_logWriter.Log($"Site: {_serverData.SiteConfig.Site}");
-            //_logWriter.Log($"Root folder: {_serverData.SiteConfig.RootFolder}");
-            //_logWriter.Log($"Max concurrent requests: {_serverData.SiteConfig.MaxConcurrentRequests}");            
-            //_logWriter.Log($"File cache enabled: {(_serverData.SiteConfig.CacheFileConfig.Expiry > TimeSpan.Zero).ToString()}");
         }
 
         /// <summary>

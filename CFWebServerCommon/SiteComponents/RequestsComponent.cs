@@ -1,5 +1,4 @@
-﻿using CFWebServer.Enums;
-using CFWebServer.Interfaces;
+﻿using CFWebServer.Interfaces;
 using CFWebServer.Models;
 
 namespace CFWebServer.WebServerComponents
@@ -68,19 +67,10 @@ namespace CFWebServer.WebServerComponents
                 // Process next queued request if any
                 if (_siteData.ActiveRequestContexts.Count < _siteData.SiteConfig.MaxConcurrentRequests)
                 {
-                    if (_siteData.RequestContextQueue.Any())
-                    {
-                        var requestContext = _siteData.RequestContextQueue.Dequeue();
-                        if (requestContext != null)
-                        {
-                            // Add to active requests
-                            _siteData.Mutex.WaitOne();
-                            _siteData.ActiveRequestContexts.Add(requestContext);
-                            _siteData.Mutex.ReleaseMutex();
-
-                            // Handle request
-                            var task = HandleAsync(requestContext);
-                        }
+                    if (_siteData.RequestContextQueue.Any() &&
+                        _siteData.RequestContextQueue.TryDequeue(out var requestContext))
+                    {                                                
+                        var task = HandleRequestAsync(requestContext);                        
                     }
                 }
 
@@ -93,7 +83,7 @@ namespace CFWebServer.WebServerComponents
                     checkFileCacheTask = CheckFileCacheTask();
                 }
                 else if (checkFileCacheTask != null &&
-                    checkFileCacheTask.IsCompleted)
+                    checkFileCacheTask.IsCompleted)     // Task completed, allow new instance to run
                 {
                     checkFileCacheTask = null;
                 }
@@ -138,14 +128,19 @@ namespace CFWebServer.WebServerComponents
         /// </summary>
         /// <param name="requestContext"></param>
         /// <returns></returns>
-        private Task HandleAsync(RequestContext requestContext)
+        private Task HandleRequestAsync(RequestContext requestContext)
         {
+            // Add to active requests. Don't really need to do it in the task thread
+            _siteData.Mutex.WaitOne();
+            _siteData.ActiveRequestContexts.Add(requestContext);
+            _siteData.Mutex.ReleaseMutex();
+
             var task = Task.Factory.StartNew(() =>
             {
                 _logWriter.LogRequest(requestContext);
 
                 try
-                {
+                {                    
                     // Get request handler
                     var webRequestHandler = _webRequestHandlerFactory.Get(requestContext, _siteData);
 

@@ -13,10 +13,7 @@ using System.Net;
 namespace CFWebServerConsole
 {
     /// <summary>
-    /// NOTES:
-    /// - We start in one of the following modes:
-    ///      a) All enabled websites with a config. If /sit-config-id command line param not set.
-    ///      b) Website with a site config. Requires /site-config-id command line param.    
+    /// NOTES:    
     /// - Each Site instance serves one website. We pass in seperate dependencies for each because each site 
     ///   is independent.
     /// - We create an internal website which handles site config requests. E.g. Add site, update site permissions.
@@ -33,7 +30,7 @@ namespace CFWebServerConsole
             Console.WriteLine($"Local IP: {localIP}");
             
             // Create sites to start
-            IWebServer webServer = new WebServer();
+            var webServer = new WebServer();
 
             var siteConfigService = serviceProvider.GetRequiredService<ISiteConfigService>();
             var siteFactory = serviceProvider.GetRequiredService<ISiteFactory>();
@@ -54,15 +51,9 @@ namespace CFWebServerConsole
             // Start sites
             webServer.Sites.ForEach(site => site.Start());
 
-            /*
-            // Wait for user to press escape
-            do
-            {
-                Thread.Sleep(100);
-                Thread.Yield();
-            } while (true);
-            */
-            
+            // Wait for requrest to stop
+            // TODO: Consider supporting a command line argument /STOP so that user can run a second instance of this process
+            // that tells the first instance to stop and then terminates.
             do
             {
                 Console.WriteLine("Press ESCAPE to stop");  // Also displayed if user presses other key

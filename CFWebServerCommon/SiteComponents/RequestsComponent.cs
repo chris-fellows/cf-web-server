@@ -66,7 +66,7 @@ namespace CFWebServer.WebServerComponents
             {               
                 // Process next queued request if any
                 if (_siteData.ActiveRequestContexts.Count < _siteData.SiteConfig.MaxConcurrentRequests)
-                {
+                {                    
                     if (_siteData.RequestContextQueue.Any() &&
                         _siteData.RequestContextQueue.TryDequeue(out var requestContext))
                     {                                                

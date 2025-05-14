@@ -67,6 +67,7 @@ namespace CFWebServer.WebServerComponents
 
         public void WorkerThread()
         {
+            var isWaited = false;
             while (!_cancellationToken.IsCancellationRequested)
             {
                 try
@@ -76,21 +77,23 @@ namespace CFWebServer.WebServerComponents
 
                     Console.WriteLine("Received request");
 
-                    // Add request to queue
-                    var requestContext = new RequestContext(listenerContext.Request, listenerContext.Response);
-                    _siteData.Mutex.WaitOne();
-                    _siteData.RequestContextQueue.Enqueue(requestContext);                    
+                    // Add request to queue                    
+                    isWaited = _siteData.Mutex.WaitOne();
+                    _siteData.RequestContextQueue.Enqueue(new RequestContext(listenerContext.Request, listenerContext.Response));
                     _siteData.Statistics.CountRequestsReceived = (_siteData.Statistics.CountRequestsReceived % int.MaxValue) + 1;
-                    _siteData.Statistics.LastRequestReceivedTime = DateTimeOffset.UtcNow;
-                    _siteData.Mutex.ReleaseMutex();
-
-                    Thread.Sleep(1);
+                    _siteData.Statistics.LastRequestReceivedTime = DateTimeOffset.UtcNow;                    
                 }
                 catch (HttpListenerException)
                 {
-                    if (!_cancellationToken.IsCancellationRequested) throw;                    
+                    if (!_cancellationToken.IsCancellationRequested) throw;
                 }
+                finally
+                {
+                    if (isWaited) _siteData.Mutex.ReleaseMutex();
+                    isWaited = false;
 
+                    Thread.Sleep(1);
+                }
                 Thread.Sleep(1);
             }
         }
